@@ -1,0 +1,14 @@
+[project]
+name = "backend"
+version = "0.1.0"
+description = "Add your description here"
+requires-python = ">=3.8"
+dependencies = [
+    "aiohttp>=3.10.11",
+    "fastapi>=0.115.11",
+    "matplotlib>=3.7.5",
+    "pandas>=2.0.3",
+    "sqlalchemy>=2.0.39",
+    "uvicorn>=0.33.0",
+    "watchdog>=4.0.2",
+]

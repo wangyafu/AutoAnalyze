@@ -1,0 +1,67 @@
+# 前端相关
+node_modules/
+dist/
+dist-ssr/
+*.local
+.env.local
+.env.*.local
+.cache/
+.idea/
+.vscode/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.pnp*
+.DS_Store
+
+# 后端相关
+venv/
+*.pyc
+*.pyo
+*.pyd
+__pycache__/
+.pytest_cache/
+.coverage
+.coverage.*
+htmlcov/
+*.log
+*.sqlite
+.env
+.env.db
+.env.test
+instance/
+.webassets-cache
+
+# 测试生成文件
+unit.xml
+junit.xml
+
+# 本地数据库文件
+*.db
+*.db-journal
+
+# 编辑器目录
+.idea/
+.vscode/
+
+# 系统文件
+Thumbs.db
+ehthumbs.db
+[Dd]esktop.ini
+
+# 日志文件
+*.log
+logs/
+.ruff_cache/
+.venv/
+# 临时文件
+*.tmp
+*.temp
+
+创意.md
+api文档.md

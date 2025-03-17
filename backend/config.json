@@ -1,0 +1,24 @@
+{
+    "version": "1.0.0",
+    "workspace": null,
+    "config_path": "d:\\deep\\backend\\config.json",
+    "model": {
+        "type": "openai",
+        "api_key": "sk-dba429c5df0444868270f42a98c3f877",
+        "endpoint": "https://dashscope.aliyuncs.com/compatible-mode/v1",
+        "model": "qwen-plus"
+    },
+    "security": {
+        "max_execution_time": 300,
+        "max_memory": 1024
+    },
+    "database": {
+        "type": "sqlite",
+        "path": "./data/history.db"
+    },
+    "server": {
+        "host": "127.0.0.1",
+        "port": 8000,
+        "frontend_port": 5173
+    }
+}
