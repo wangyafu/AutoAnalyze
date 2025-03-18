@@ -200,7 +200,12 @@ if __name__ == "__main__":
     from app.core.model_client import ModelClient,create_client
     from app.config import get_settings
     from app.core.filesystem import filesystem_manager
-    filesystem_manager.set_workspace("D://fakedata//exam_data")
+    import os
+    current_file_path = os.path.abspath(__file__)
+    #获取项目根目录
+    root_path=os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(current_file_path))))
+    root_path=os.path.dirname(root_path)
+    filesystem_manager.set_workspace(root_path+"\\examples\\exam")
     async def test_agent():
         # 创建一个测试用的ModelClient实例
         settings=get_settings()

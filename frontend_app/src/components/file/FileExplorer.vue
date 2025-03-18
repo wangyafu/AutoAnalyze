@@ -46,7 +46,7 @@
 import { ref, onMounted, defineProps, watch } from 'vue'
 import { ElMessage } from 'element-plus'
 import { apiService } from '../../services/api'
-
+import type {FileItem,FilePreview } from "@/types"
 // 导入图标
 import folderIcon from '@/assets/icons/folder.svg'
 import codeIcon from '@/assets/icons/code.svg'
@@ -56,27 +56,6 @@ import archiveIcon from '@/assets/icons/archive.svg'
 import fileIcon from '@/assets/icons/file.svg'
 
 const emit = defineEmits(['filePreview'])
-interface FileItem {
-  name: string
-  path: string 
-  type: 'file' | 'directory'
-  size?: number
-  modified?: string
-  extension?: string
-  expanded?: boolean
-  children?: FileItem[] 
-}
-
-interface FilePreview {
-  name: string
-  path: string
-  type: string
-  size: number
-  content: string
-  is_binary: boolean
-  is_truncated: boolean
-  encoding?: string
-}
 
 const props = defineProps({
   basePath: {
@@ -149,16 +128,15 @@ function getItemPath(item: FileItem): string {
 // 预览文件
 async function previewFile(item: FileItem) {
   try {
-    const preview = await apiService.getFilePreview(item.path)
+    
     // 这里可以触发一个事件，通知父组件显示文件预览
     // 或者使用全局状态管理来处理
-    console.log('File preview:', preview)
+    console.log('Preview file:', item.path)
     
     // 添加事件触发
-    emit('filePreview', preview)
+    emit('filePreview', item.path)
   } catch (err) {
-    console.error('Failed to preview file:', err)
-    ElMessage.error('预览文件失败')
+    console.error("发送文件预览事件失败:", err)
   }
 }
 

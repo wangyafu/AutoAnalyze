@@ -6,7 +6,7 @@
         <h2 class="text-lg font-semibold">文件浏览器</h2>
         <p class="text-sm text-gray-500 mt-1">{{ workspaceStore.currentWorkspace }}</p>
       </div>
-      <FileExplorer />
+      <FileExplorer @filePreview="handleFilePreview"/>
     </div>
     
     <!-- 右侧聊天区域 -->
@@ -27,6 +27,16 @@
         />
       </div>
     </div>
+    
+    <!-- 文件预览对话框 -->
+    <el-dialog
+      v-model="showPreview"
+      :title="previewFile?.path"
+      width="60%"
+      destroy-on-close
+    >
+      <pre class="whitespace-pre-wrap break-words">{{ previewFile?.content }}</pre>
+    </el-dialog>
   </div>
 </template>
 
@@ -40,11 +50,15 @@ import ChatInput from '../components/chat/ChatInput.vue'
 import { useWorkspaceStore } from '../stores/workspace'
 import { useConversationStore } from '../stores/conversation'
 import { websocketService } from '../services/websocket'
-
+import { apiService } from '../services/api'
+import type { FilePreview } from '../types'
 const router = useRouter()
 const workspaceStore = useWorkspaceStore()
 const conversationStore = useConversationStore()
 const chatContainer = ref<HTMLElement | null>(null)
+
+const showPreview = ref(false)
+const previewFile = ref<FilePreview | null>(null)
 
 // 如果没有设置工作目录，重定向到首页
 onMounted(() => {
@@ -57,6 +71,24 @@ onMounted(() => {
   // 初始化WebSocket连接
   websocketService.connect()
 })
+
+async function handleFilePreview(path: string) {
+  try {
+    const response = await apiService.getFilePreview(path)
+    
+      const data = response as FilePreview
+      console.log('File preview:', data)
+      if (data.is_binary) {
+        ElMessage.warning('二进制文件无法预览')
+        return
+      }
+      previewFile.value = data
+      showPreview.value = true
+    
+  } catch (error) {
+    ElMessage.error('文件预览失败')
+  }
+}
 
 // 监听消息变化，自动滚动到底部
 watch(
