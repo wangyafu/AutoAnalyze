@@ -1,0 +1,35 @@
+{
+  "name": "frontend-app",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "run-p type-check \"build-only {@}\" --",
+    "preview": "vite preview",
+    "build-only": "vite build"
+  },
+  "dependencies": {
+    "@tailwindcss/vite": "^4.0.14",
+    "axios": "^1.8.3",
+    "element-plus": "^2.9.6",
+    "highlight.js": "^11.9.0",
+    "markdown-it": "^14.0.0",
+    "path": "^0.12.7",
+    "pinia": "^3.0.1",
+    "ts-node": "^10.9.2",
+    "vue": "^3.5.13",
+    "vue-router": "^4.5.0"
+  },
+  "devDependencies": {
+    "@types/markdown-it": "^13.0.7",
+    "@vitejs/plugin-vue": "^5.2.1",
+    "@vue/tsconfig": "^0.7.0",
+    "autoprefixer": "^10.4.21",
+    "postcss": "^8.5.3",
+    "tailwindcss": "^4.0.14",
+    "typescript": "~5.7.2",
+    "vite": "^6.2.0",
+    "vue-tsc": "^2.2.4"
+  }
+}

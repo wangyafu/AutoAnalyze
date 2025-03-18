@@ -1,5 +1,5 @@
 from fastapi import APIRouter, Depends, HTTPException
-from ..schemas.config import StatusResponse, SystemConfig
+from ..schemas.config import StatusResponse, SystemConfig,ModelStatusResponse
 from ..services.model_service import get_model_status
 from ..config import get_settings, save_config_to_file
 from typing import Dict, Any
@@ -17,26 +17,9 @@ async def get_status():
     return StatusResponse(
         status="ok",
         version=settings.version,
-        model_status=model_status,
+        model=ModelStatusResponse(status="connected" if model_status["status"] else "notconnected",type=settings.model.type),
         workspace=settings.workspace,
-        config=settings.dict()
+        config=settings.model_dump()
     )
 
 
-@router.put("/config", response_model=StatusResponse)
-async def update_config(config: SystemConfig):
-    """更新系统配置"""
-    settings = get_settings()
-    
-    # 更新配置
-    for key, value in config.dict().items():
-        if hasattr(settings, key):
-            setattr(settings, key, value)
-    
-    # 保存配置到文件
-    try:
-        save_config_to_file(settings, settings.config_path)
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=f"保存配置失败: {str(e)}")
-    
-    return await get_status()

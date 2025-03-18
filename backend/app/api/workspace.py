@@ -1,24 +1,34 @@
 from fastapi import APIRouter, Depends, HTTPException, Query
 from app.schemas.filesystem import WorkspaceRequest, WorkspaceResponse, FileItem, DirectoryItem, FilePreview, FileSystemItem
-from app.services.filesystem_service import set_workspace, get_files, get_file_preview
+from app.core.filesystem import filesystem_manager  # 导入 filesystem_manager 实例
+from app.services.filesystem_service import get_files,get_file_preview
 from typing import List, Optional, Union
 import os
-
+from app.utils.logger import get_logger
 # 创建工作区路由实例
 router = APIRouter()
 
 # 创建文件路由实例
 files_router = APIRouter()
-
+logger = get_logger(__name__)
 
 @router.post("", response_model=WorkspaceResponse)
 async def set_workspace_path(request: WorkspaceRequest):
+    logger.info(f"前端选择工作目录为: {request.path}")
     """设置工作目录"""
     try:
-        workspace_path = set_workspace(request.path)
+        result = filesystem_manager.set_workspace(request.path)
+
+        if result["status"] == "error":
+            return WorkspaceResponse(
+                status="error",
+                error=result["error"]
+            )
+        
+
         return WorkspaceResponse(
             status="success",
-            workspace=workspace_path
+            workspace=result["workspace"]
         )
     except Exception as e:
         return WorkspaceResponse(
@@ -34,6 +44,7 @@ async def get_file_structure(path: Optional[str] = Query(None, description="相�
         files = get_files(path)
         return files
     except Exception as e:
+        logger.error(f"获取文件目录结构失败: {e}")
         raise HTTPException(status_code=404, detail=str(e))
 
 

@@ -52,7 +52,7 @@ class Agent:
             # 如果响应中包含函数调用
             if response.get("message", {}).get("tool_calls"):
                 tool_calls = response["message"]["tool_calls"]
-                await self.apeendAiMessage(response["message"]["content"],tool_calls)
+                await self.appendAiMessage(response["message"]["content"],tool_calls)
                 
                 # 处理所有函数调用
                 for tool_call in tool_calls:
@@ -60,14 +60,17 @@ class Agent:
                     invocation_id = str(uuid.uuid4())  # 生成唯一调用ID
                     
                     # 发送工具调用开始通知
-                    await manager.broadcast_execution_update(
-                        self.conversation_id,
+                    await manager.broadcast_message(
+                        
                         {
                             "type": "tool_invocation_start",
+                            "data":{
                             "invocation_id": invocation_id,
                             "function": function_call["name"],
                             "arguments": json.loads(function_call["arguments"]),
                             "timestamp": datetime.datetime.now().isoformat()
+                            }
+                            
                         }
                     )
                     
@@ -78,14 +81,17 @@ class Agent:
                     )
                     
                     # 发送工具调用结果通知
-                    await manager.broadcast_execution_update(
-                        self.conversation_id,
+                    await manager.broadcast_message(
+                     
                         {
                             "type": "tool_invocation_result",
+                            "data":{
                             "invocation_id": invocation_id,
                             "function": function_call["name"],
                             "result": result,
                             "timestamp": datetime.datetime.now().isoformat()
+                            }
+                            
                         }
                     )
                     
@@ -104,24 +110,36 @@ class Agent:
                 "role": "assistant",
                 "content": response["message"]["content"]
             })
+            await manager.broadcast_message(
+                {
+                    "type": "done",
+                    "data":{
+                    "timestamp": datetime.datetime.now().isoformat(),
+                    "conversation_id":self.conversation_id
+                    }
+                }
+            )
             return response["message"]["content"]
-    async def apeendAiMessage(self,message:str,tool_calls:List[Dict[str,Any]]=None):
+    async def appendAiMessage(self,message:str,tool_calls:List[Dict[str,Any]]=None):
         self.messages.append({
                 "role": "assistant",
                 "content": message,
                 "tool_calls":tool_calls
                 
             })
+        if len(message)>0:
          # 广播助手消息到WebSocket客户端
-        await manager.broadcast_execution_update(
-            self.conversation_id,
-            {
-                "type": "assistant_message",
-                "content": assistant_response,
-                "timestamp": datetime.datetime.now().isoformat(),
-                "conversation_id":self.conversation_id
-            }
-        )
+            await manager.broadcast_message(
+
+                {
+                    "type": "assistant_message",
+                    "data":{
+                    "content": message,
+                    "timestamp": datetime.datetime.now().isoformat(),
+                    "conversation_id":self.conversation_id
+                }
+                }
+            )
         
         
     async def _handle_function_call(self, function_call: Dict[str, Any]) -> None:

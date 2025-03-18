@@ -2,8 +2,6 @@ import json
 from fastapi import WebSocket
 from typing import Dict, Any
 from ..websocket.manager import ConnectionManager
-from ..services.execution_service import execute_code, cancel_execution
-from ..services.conversation_service import add_message
 from ..services.model_service import send_message
 import logging
 
@@ -25,8 +23,8 @@ async def handle_message(message: str, websocket: WebSocket, manager: Connection
             await handle_subscribe_execution(data.get("data", {}), websocket, manager)
         elif message_type == "unsubscribe":
             await handle_unsubscribe(data.get("data", {}), websocket, manager)
-        elif message_type == "cancel_execution":
-            await handle_cancel_execution(data.get("data", {}), websocket, manager)
+        # elif message_type == "cancel_execution":
+        #     await handle_cancel_execution(data.get("data", {}), websocket, manager)
         else:
             # 未知消息类型
             await manager.send_personal_message({
@@ -75,24 +73,11 @@ async def handle_user_message(data: Dict[str, Any], websocket: WebSocket, manage
     
     try:
         # 保存用户消息到数据库
-        user_message = await add_message(conversation_id, "user", content)
+        # user_message = await add_message(conversation_id, "user", content)
         
         # 发送消息到模型并获取回复
         response = await send_message(conversation_id, content)
-        
-        # 保存助手消息到数据库
-        assistant_message = await add_message(conversation_id, "assistant", response)
-        
-        # 发送助手消息回客户端
-        await manager.send_personal_message({
-            "type": "assistant_message",
-            "data": {
-                "conversation_id": conversation_id,
-                "message_id": assistant_message.id,
-                "content": response,
-                "timestamp": assistant_message.created_at.isoformat()
-            }
-        }, websocket)
+
         
     except Exception as e:
         logger.exception(f"处理用户消息时出错: {str(e)}")
@@ -162,42 +147,3 @@ async def handle_unsubscribe(data: Dict[str, Any], websocket: WebSocket, manager
         }
     }, websocket)
 
-
-async def handle_cancel_execution(data: Dict[str, Any], websocket: WebSocket, manager: ConnectionManager):
-    """处理取消执行"""
-    execution_id = data.get("execution_id")
-    
-    if not execution_id:
-        await manager.send_personal_message({
-            "type": "error",
-            "data": {
-                "code": "invalid_request",
-                "message": "缺少必要参数: execution_id"
-            }
-        }, websocket)
-        return
-    
-    try:
-        # 取消代码执行
-        result = await cancel_execution(execution_id)
-        
-        # 发送取消结果
-        await manager.send_personal_message({
-            "type": "execution_cancelled",
-            "data": {
-                "execution_id": execution_id,
-                "status": "cancelled" if result else "cancel_failed",
-                "message": "执行已取消" if result else "取消执行失败"
-            }
-        }, websocket)
-        
-    except Exception as e:
-        logger.exception(f"取消执行时出错: {str(e)}")
-        await manager.send_personal_message({
-            "type": "error",
-            "data": {
-                "code": "cancel_execution_error",
-                "message": "取消执行时出错",
-                "details": str(e)
-            }
-        }, websocket)

@@ -32,15 +32,20 @@ class ServerConfig(BaseModel):
 class SystemConfig(BaseModel):
     """系统配置"""
     model: ModelConfig = Field(..., description="模型配置")
-    security: SecurityConfig = Field(..., description="安全配置")
-    database: DatabaseConfig = Field(..., description="数据库配置")
-    server: ServerConfig = Field(..., description="服务器配置")
+    # security: SecurityConfig = Field(..., description="安全配置")
+    # database: DatabaseConfig = Field(..., description="数据库配置")
+    # server: ServerConfig = Field(..., description="服务器配置")
 
+
+class ModelStatusResponse(BaseModel):
+    """模型状态响应"""
+    status: str = Field(..., description="模型状态")
+    type: str = Field(..., description="模型类型")
 
 class StatusResponse(BaseModel):
     """状态响应"""
     status: str = Field(..., description="状态，'ok'或'error'")
     version: str = Field(..., description="应用版本")
-    model_status: str = Field(..., description="模型状态")
+    model: ModelStatusResponse = Field(..., description="模型状态")
     workspace: Optional[str] = Field(None, description="当前工作目录")
     config: Dict[str, Any] = Field(..., description="当前配置")

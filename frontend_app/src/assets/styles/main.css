@@ -1,0 +1,42 @@
+@import "tailwindcss";
+/* 全局样式 */
+body {
+  font-family: system-ui, -apple-system, sans-serif;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  color: #1f2937;
+}
+
+/* 自定义组件样式 */
+@layer components {
+  .btn {
+    padding: 0.5rem 1rem;
+    border-radius: 0.375rem;
+    transition-property: color, background-color;
+    transition-duration: 150ms;
+  }
+  
+  .btn-primary {
+    background-color: #3b82f6;
+    color: white;
+  }
+  .btn-primary:hover {
+    background-color: #2563eb;
+  }
+  
+  .btn-secondary {
+    background-color: #e5e7eb;
+    color: #1f2937;
+  }
+  .btn-secondary:hover {
+    background-color: #d1d5db;
+  }
+  
+  .card {
+    background-color: white;
+    border-radius: 0.5rem;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+    padding: 1rem;
+  }
+}

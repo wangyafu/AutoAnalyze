@@ -2,13 +2,11 @@ import os
 import shutil
 from typing import List, Optional, Dict, Any, Union
 from pathlib import Path
-from ..config import get_settings
-from ..schemas.filesystem import FileItem, DirectoryItem, FilePreview, FileSystemItem
-from ..utils.file_utils import get_file_type, is_text_file, format_file_size
-
-# 全局变量，存储当前工作目录
-_workspace = None
-
+from app.config import get_settings
+from app.schemas.filesystem import FileItem, DirectoryItem, FilePreview, FileSystemItem
+from app.utils.file_utils import get_file_type, is_text_file, format_file_size
+from app.core.filesystem import filesystem_manager
+from datetime import datetime
 def set_workspace(path: str) -> str:
     """
     设置工作目录
@@ -22,28 +20,15 @@ def set_workspace(path: str) -> str:
     Raises:
         Exception: 目录不存在或无法访问时抛出异常
     """
-    global _workspace
-    
-    # 验证目录是否存在
-    if not os.path.exists(path):
-        raise Exception(f"目录不存在: {path}")
-    
-    # 验证是否为目录
-    if not os.path.isdir(path):
-        raise Exception(f"路径不是目录: {path}")
-    
-    # 验证是否有读写权限
-    if not os.access(path, os.R_OK | os.W_OK):
-        raise Exception(f"目录无读写权限: {path}")
-    
-    # 设置工作目录
-    _workspace = path
+    result = filesystem_manager.set_workspace(path)
+    if result["status"] == "error":
+        raise Exception(result["error"])
     
     # 更新配置
     settings = get_settings()
     settings.workspace = path
     
-    return _workspace
+    return result["workspace"]
 
 def get_workspace() -> str:
     """
@@ -55,10 +40,11 @@ def get_workspace() -> str:
     Raises:
         Exception: 工作目录未设置时抛出异常
     """
-    if _workspace is None:
+    workspace = filesystem_manager.workspace
+    if workspace is None:
         raise Exception("工作目录未设置")
     
-    return _workspace
+    return workspace
 
 def get_absolute_path(relative_path: Optional[str] = None) -> str:
     """
@@ -116,34 +102,33 @@ def get_files(path: Optional[str] = None) -> List[FileSystemItem]:
     for item in os.listdir(abs_path):
         item_path = os.path.join(abs_path, item)
         rel_path = os.path.relpath(item_path, get_workspace())
+        last_modified = os.path.getmtime(item_path)
         
         if os.path.isdir(item_path):
             # 目录
-            dir_items_count = len(os.listdir(item_path))
-            items.append(DirectoryItem(
+            items.append(FileSystemItem(root=DirectoryItem(
                 name=item,
                 path=rel_path,
-                items_count=dir_items_count
-            ))
+                type="directory",
+                modified=datetime.fromtimestamp(last_modified)
+            )))
         else:
             # 文件
             file_size = os.path.getsize(item_path)
             file_type = get_file_type(item_path)
-            last_modified = os.path.getmtime(item_path)
             extension = os.path.splitext(item)[1].lstrip('.')
             
-            items.append(FileItem(
+            items.append(FileSystemItem(root=FileItem(
                 name=item,
                 path=rel_path,
+                type="file",
                 size=file_size,
-                formatted_size=format_file_size(file_size),
-                type=file_type,
-                last_modified=last_modified,
+                modified=datetime.fromtimestamp(last_modified),
                 extension=extension
-            ))
+            )))
     
     # 排序：目录在前，文件在后，按名称排序
-    items.sort(key=lambda x: (not isinstance(x, DirectoryItem), x.name.lower()))
+    items.sort(key=lambda x: (not isinstance(x.root, DirectoryItem), x.root.name.lower()))
     
     return items
 
@@ -206,10 +191,10 @@ def get_file_preview(path: str, max_size: int = 100000) -> FilePreview:
         path=path,
         type=file_type,
         size=file_size,
-        formatted_size=format_file_size(file_size),
-        preview=preview_content,
-        truncated=truncated,
-        extension=extension
+        content=preview_content,
+        is_binary=not is_text,
+        is_truncated=truncated,
+        encoding="utf-8" if is_text else None
     )
 
 def get_file_content(path: str) -> str:
@@ -257,3 +242,49 @@ def start_file_watcher():
     # 此功能需要实现文件系统监控
     # 可以使用watchdog库实现
     pass
+
+
+if __name__ == "__main__":
+# 测试文件系统服务
+    def test_filesystem_service():
+        try:
+            # 1. 测试设置工作目录
+            test_dir = "D:\\fakedata"  # 请确保此目录存在
+            print("\n1. 测试设置工作目录:")
+            workspace = set_workspace(test_dir)
+            print(f"工作目录设置为: {workspace}")
+            
+            # 2. 测试获取文件列表
+            print("\n2. 测试获取文件列表:")
+            files = get_files()
+            print("文件列表:")
+            for item in files:
+                type_str = "目录" if isinstance(item.root, DirectoryItem) else "文件"
+                print(f"- [{type_str}] {item.root.name}")
+            
+            # 3. 测试文件预览
+            print("\n3. 测试文件预览:")
+            # 假设工作目录中有一个文本文件
+            test_file = "main.py"  # 请确保此文件存在
+            try:
+                preview = get_file_preview(test_file)
+                print(f"文件名: {preview.name}")
+                print(f"类型: {preview.type}")
+                print(f"大小: {preview.formatted_size}")
+                print("预览内容:")
+                print(preview.preview[:100] + "..." if len(preview.preview) > 100 else preview.preview)
+            except Exception as e:
+                print(f"预览文件失败: {str(e)}")
+            
+            # 4. 测试文件内容读取
+            print("\n4. 测试文件内容读取:")
+            try:
+                content = get_file_content(test_file)
+                print(f"文件内容 (前100个字符):")
+                print(content[:100] + "..." if len(content) > 100 else content)
+            except Exception as e:
+                print(f"读取文件失败: {str(e)}")
+        except Exception as e:
+            print(f"测试失败: {str(e)}")
+# 运行测试
+    test_filesystem_service()

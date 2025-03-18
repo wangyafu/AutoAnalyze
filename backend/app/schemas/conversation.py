@@ -18,8 +18,6 @@ class ConversationResponse(ConversationBase):
     """对话响应"""
     id: str = Field(..., description="对话ID")
     created_at: datetime = Field(..., description="创建时间")
-    updated_at: datetime = Field(..., description="更新时间")
-    message_count: Optional[int] = Field(0, description="消息数量")
 
     class Config:
         orm_mode = True

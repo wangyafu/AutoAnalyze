@@ -2,8 +2,7 @@ from typing import Dict, Any, Optional
 import asyncio
 from app.core.model_client import create_client, ModelClient
 from app.config import get_settings
-from app.db.session import get_db
-from app.services.conversation_service import add_message
+
 from app.core.agent.agent import create_agent, run_agent
 from app.schemas.config import ModelConfig
 from app.core.agent.agent import Agent

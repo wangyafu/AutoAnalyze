@@ -93,6 +93,8 @@ class ConnectionManager:
             "data": change_data
         }
         await self.broadcast(message)
+    async def broadcast_message(self,message:dict):
+        await self.broadcast(message)
 
 
 # 创建全局连接管理器实例
