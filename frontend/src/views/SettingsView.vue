@@ -56,8 +56,8 @@ const form = reactive({
   model: {
     type: 'openai',
     api_key: '',
-    endpoint: 'https://api.openai.com/v1',
-    model: 'gpt-4'  // 新增模型名称字段
+    endpoint: '',
+    model: ''  // 新增模型名称字段
   }
 })
 
