@@ -14,7 +14,9 @@
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
             </svg>
             <span>系统已连接，模型状态正常</span>
+           
           </div>
+          <el-button type="primary" class="mt-2" @click="router.push('/settings')">修改配置</el-button>
         </div>
         <div v-else class="text-red-500 mb-4">
           <div class="flex items-center justify-center">
