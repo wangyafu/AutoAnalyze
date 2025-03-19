@@ -1,7 +1,7 @@
 <template>
   <div class="flex flex-col items-center justify-center min-h-screen p-6">
     <div class="card max-w-2xl w-full text-center">
-      <h1 class="text-3xl font-bold mb-4">欢迎使用 DeepAnalyze</h1>
+      <h1 class="text-3xl font-bold mb-4">欢迎使用 AutoAnalyze</h1>
       <p class="text-lg mb-6">智能数据分析助手，帮助您更高效地理解和处理数据</p>
       
       <div class="mb-8">

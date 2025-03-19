@@ -29,7 +29,7 @@ logger = logging.getLogger(__name__)
 
 # 创建应用实例
 app = FastAPI(
-    title="DeepAnalyze",
+    title="AutoAnalyze",
     description="数据分析助手API",
     version="1.0.0"
 )

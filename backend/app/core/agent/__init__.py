@@ -1,2 +1,2 @@
 # Agent module initialization
-# This module contains the core agent implementation for DeepAnalyze
+# This module contains the core agent implementation for AutoAnalyze

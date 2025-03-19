@@ -1,7 +1,7 @@
 
-# DeepAnalyze API 文档
+# AutoAnalyze API 文档
 
-本文档描述了 DeepAnalyze 平台的 API 接口，包括 HTTP REST API 和 WebSocket 实时通信接口。
+本文档描述了 AutoAnalyze 平台的 API 接口，包括 HTTP REST API 和 WebSocket 实时通信接口。
 
 ## 基础信息
 

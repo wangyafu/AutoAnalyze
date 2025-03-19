@@ -9,7 +9,7 @@ db_dir = Path(os.path.dirname(os.path.abspath(__file__)))
 db_dir.parent.parent.joinpath('data').mkdir(exist_ok=True)
 
 # 数据库URL
-SQLALCHEMY_DATABASE_URL = f"sqlite:///{db_dir.parent.parent}/data/deepanalyze.db"
+SQLALCHEMY_DATABASE_URL = f"sqlite:///{db_dir.parent.parent}/data/AutoAnalyze.db"
 
 # 创建SQLAlchemy引擎
 engine = create_engine(

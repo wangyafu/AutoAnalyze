@@ -1,5 +1,5 @@
 from fastapi import APIRouter
-from . import status, workspace, conversations, execution
+from . import status, workspace, conversations
 from fastapi import APIRouter, Depends, HTTPException
 from ..schemas.config import StatusResponse, SystemConfig
 from ..services.model_service import get_model_status

@@ -14,7 +14,7 @@ import datetime
 from app.websocket.manager import manager
 
 class Agent:
-    """Base Agent class for DeepAnalyze"""
+    """Base Agent class for AutoAnalyze"""
     
     def __init__(self, model_client: ModelClient, conversation_id: str):
         # 初始化函数执行器
