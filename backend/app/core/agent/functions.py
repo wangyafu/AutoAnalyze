@@ -4,8 +4,7 @@ import io
 import traceback
 from typing import Dict, List, Optional, Any, Union
 import pandas as pd
-import matplotlib.pyplot as plt
-from contextlib import redirect_stdout, redirect_stderr
+
 import asyncio
 from app.core.filesystem import FileSystemManager
 import logging

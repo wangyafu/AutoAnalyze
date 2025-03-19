@@ -158,9 +158,8 @@ function formatMessage(content: string): string {
   }
 }
 function fotmatCode(code:string):string{
-  code="```python"+"\n"+code
-  code+="```"
-  console.log(code)
+  console.log("原始代码为：",code)
+  code="```python"+"\n"+code+"\n"+"```"
   const result=formatMessage(code)
   console.log("格式化后的代码为：",result)
   return result
@@ -172,29 +171,7 @@ function formatFileList(filenames: string[] | undefined): string {
   }
   return filenames.map(f => `- ${f}`).join('\n')
 }
-// 获取函数执行成功的消息
-function getFunctionSuccessMessage(functionName: string): string {
-  switch (functionName) {
-    case 'read_directory':
-      return '目录读取成功'
-    case 'read_files':
-      return '文件读取成功'
-    default:
-      return '操作成功'
-  }
-}
 
-// 获取函数执行失败的消息
-function getFunctionErrorMessage(functionName: string): string {
-  switch (functionName) {
-    case 'read_directory':
-      return '目录读取失败'
-    case 'read_files':
-      return '文件读取失败'
-    default:
-      return '操作失败'
-  }
-}
 </script>
 
 <style scoped>

@@ -49,7 +49,7 @@
 </template>
 
 <script setup lang="ts">
-import { onMounted, reactive,ref } from 'vue'
+import { onMounted, reactive, ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { ElMessage } from 'element-plus'
 import { useWorkspaceStore} from '../stores/workspace'
@@ -78,14 +78,28 @@ onMounted(async () => {
 
 const directoryPath = ref('')
 
+// 处理路径的辅助函数
+const sanitizePath = (path: string): string => {
+  const trimmedPath = path.trim()
+  if ((trimmedPath.startsWith('"') && trimmedPath.endsWith('"')) || 
+      (trimmedPath.startsWith("'") && trimmedPath.endsWith("'"))) {
+    ElMessage.warning('路径两端的引号已被自动移除')
+    return trimmedPath.slice(1, -1)
+  }
+  return trimmedPath
+}
+
 const handleDirectoryInput = async () => {
   if (!directoryPath.value) {
     ElMessage.warning('请输入目录路径')
     return
   }
   
+  const sanitizedPath = sanitizePath(directoryPath.value)
+  directoryPath.value = sanitizedPath
+  
   try {
-    const response = await apiService.setWorkspace(directoryPath.value)
+    const response = await apiService.setWorkspace(sanitizedPath)
     workspaceStore.setWorkspace(response.workspace)
     
     // 创建新对话，使用当前时间作为标题
