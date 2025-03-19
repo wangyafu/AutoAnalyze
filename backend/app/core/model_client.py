@@ -125,7 +125,7 @@ class OpenAIClient(ModelClient):
                     models = await response.json()
                     logger.info(f"当前检查的服务可用的模型共有{len(models.get('data',[]))}个。")
                     return {
-                        "status": "available",
+                        "ok": True,
                         "model": self.model,
                         "api_base": self.api_base,
                         "models_available": len(models.get("data", []))
@@ -133,7 +133,7 @@ class OpenAIClient(ModelClient):
                 else:
                     error_text = await response.text()
                     return {
-                        "status": "error",
+                        "ok": False,
                         "error": f"API错误: {response.status}",
                         "details": error_text
                     }
@@ -149,7 +149,7 @@ class OpenAIClient(ModelClient):
             status = await self.get_status()
 
             # 检查状态是否成功
-            if status["status"] == "available":
+            if status["ok"]:
                 return {
                     "connected": True,
                     "model": status["model"],

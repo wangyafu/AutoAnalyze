@@ -69,7 +69,7 @@ async def get_model_status() -> Dict[str, Any]:
         return status
     except Exception as e:
         return {
-            "connected": False,
+            "ok": False,
             "error": str(e)
         }
 

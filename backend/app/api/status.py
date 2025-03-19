@@ -17,7 +17,7 @@ async def get_status():
     return StatusResponse(
         status="ok",
         version=settings.version,
-        model=ModelStatusResponse(status="connected" if model_status["status"] else "notconnected",type=settings.model.type),
+        model=ModelStatusResponse(status="connected" if model_status["ok"] else "notconnected",type=settings.model.type),
         workspace=settings.workspace,
         config=settings.model_dump()
     )
