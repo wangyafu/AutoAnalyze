@@ -1,12 +1,21 @@
 import os
 import shutil
-from typing import List, Optional, Dict, Any, Union
+import time
+import asyncio
+from typing import List, Optional, Dict, Any, Union, Callable
 from pathlib import Path
+from watchdog.observers import Observer
+from watchdog.events import FileSystemEventHandler
 from app.config import get_settings
 from app.schemas.filesystem import FileItem, DirectoryItem, FilePreview, FileSystemItem
 from app.utils.file_utils import get_file_type, is_text_file, format_file_size
 from app.core.filesystem import filesystem_manager
+from app.websocket.manager import manager
 from datetime import datetime
+from app.utils.logger import get_logger
+
+logger = get_logger(__name__)
+
 def set_workspace(path: str) -> str:
     """
     设置工作目录
@@ -75,7 +84,7 @@ def get_absolute_path(relative_path: Optional[str] = None) -> str:
 
 def get_files(path: Optional[str] = None) -> List[FileSystemItem]:
     """
-    获取文件目录结构
+    获取文件目录结构，递归获取子目录内容
     
     Args:
         path: 相对于工作目录的路径，为None时返回工作目录下的文件
@@ -86,6 +95,45 @@ def get_files(path: Optional[str] = None) -> List[FileSystemItem]:
     Raises:
         Exception: 路径不存在或无法访问时抛出异常
     """
+    def _list_directory(current_path: str) -> List[FileSystemItem]:
+        items = []
+        try:
+            for item in os.listdir(current_path):
+                item_path = os.path.join(current_path, item)
+                rel_path = os.path.relpath(item_path, get_workspace())
+                last_modified = os.path.getmtime(item_path)
+                
+                if os.path.isdir(item_path):
+                    # 递归获取子目录内容
+                    children = _list_directory(item_path)
+                    items.append(FileSystemItem(root=DirectoryItem(
+                        name=item,
+                        path=rel_path,
+                        type="directory",
+                        modified=datetime.fromtimestamp(last_modified),
+                        children=children  # 添加子目录内容
+                    )))
+                else:
+                    file_size = os.path.getsize(item_path)
+                    extension = os.path.splitext(item)[1].lstrip('.')
+                    
+                    items.append(FileSystemItem(root=FileItem(
+                        name=item,
+                        path=rel_path,
+                        type="file",
+                        size=file_size,
+                        modified=datetime.fromtimestamp(last_modified),
+                        extension=extension
+                    )))
+            
+            # 排序：目录在前，文件在后，按名称排序
+            items.sort(key=lambda x: (not isinstance(x.root, DirectoryItem), x.root.name.lower()))
+            return items
+            
+        except Exception as e:
+            logger.error(f"读取目录失败 {current_path}: {str(e)}")
+            return []
+
     # 获取绝对路径
     abs_path = get_absolute_path(path)
     
@@ -97,40 +145,8 @@ def get_files(path: Optional[str] = None) -> List[FileSystemItem]:
     if not os.path.isdir(abs_path):
         raise Exception(f"路径不是目录: {path}")
     
-    # 获取目录内容
-    items = []
-    for item in os.listdir(abs_path):
-        item_path = os.path.join(abs_path, item)
-        rel_path = os.path.relpath(item_path, get_workspace())
-        last_modified = os.path.getmtime(item_path)
-        
-        if os.path.isdir(item_path):
-            # 目录
-            items.append(FileSystemItem(root=DirectoryItem(
-                name=item,
-                path=rel_path,
-                type="directory",
-                modified=datetime.fromtimestamp(last_modified)
-            )))
-        else:
-            # 文件
-            file_size = os.path.getsize(item_path)
-            file_type = get_file_type(item_path)
-            extension = os.path.splitext(item)[1].lstrip('.')
-            
-            items.append(FileSystemItem(root=FileItem(
-                name=item,
-                path=rel_path,
-                type="file",
-                size=file_size,
-                modified=datetime.fromtimestamp(last_modified),
-                extension=extension
-            )))
-    
-    # 排序：目录在前，文件在后，按名称排序
-    items.sort(key=lambda x: (not isinstance(x.root, DirectoryItem), x.root.name.lower()))
-    
-    return items
+    # 递归获取目录内容
+    return _list_directory(abs_path)
 
 def get_file_preview(path: str, max_size: int = 100000) -> FilePreview:
     """
@@ -232,16 +248,7 @@ def get_file_content(path: str) -> str:
     except Exception as e:
         raise Exception(f"读取文件失败: {str(e)}")
 
-def start_file_watcher():
-    """
-    启动文件监视器，监控工作目录的文件变化
-    
-    Returns:
-        None
-    """
-    # 此功能需要实现文件系统监控
-    # 可以使用watchdog库实现
-    pass
+
 
 
 if __name__ == "__main__":

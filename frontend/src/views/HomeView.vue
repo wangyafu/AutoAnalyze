@@ -122,6 +122,7 @@ const handleDirectoryInput = async () => {
   
   try {
     const response = await apiService.setWorkspace(sanitizedPath)
+    console.log(response)
     workspaceStore.setWorkspace(response.workspace)
     
     // 创建新对话，使用当前时间作为标题

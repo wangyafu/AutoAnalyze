@@ -1,7 +1,7 @@
 import { defineStore } from 'pinia'
 import { ref, reactive } from 'vue'
 import { apiService } from '../services/api'
-
+import { useWorkspaceStore } from './workspace'
 export interface Message {
   id: string
   type: 'user' | 'assistant' | 'tool_start' | 'tool_result'
@@ -72,6 +72,7 @@ export const useConversationStore = defineStore('conversation', () => {
   
   // 添加工具调用结果
   function addToolInvocationResult(data: any) {
+    const fileStore=useWorkspaceStore()
     const message: Message = {
       id: `tool-result-${data.invocation_id}`,
       type: 'tool_result',
@@ -83,7 +84,9 @@ export const useConversationStore = defineStore('conversation', () => {
         result: data.result
       }
     }
-    
+    if (message.metadata.function=='exec_code'){
+      fileStore.loadFiles()
+    }
     messages.value.push(message)
   }
   

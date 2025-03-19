@@ -14,7 +14,6 @@ from app.websocket.router import router as websocket_router
 from app.config import get_settings
 from app.db.base import init_db
 from app.services.model_service import initialize_model
-from app.services.filesystem_service import start_file_watcher
 
 # 配置日志
 logging.basicConfig(
@@ -44,9 +43,7 @@ async def lifespan(app: FastAPI):
     else:
         logger.warning("模型初始化失败，请检查配置")
     
-    # 启动文件监视器
-    logger.info("启动文件监视器...")
-    start_file_watcher()
+
     
     logger.info("应用启动完成")
     

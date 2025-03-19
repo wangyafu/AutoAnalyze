@@ -6,7 +6,7 @@
     
     <div v-else-if="error" class="text-red-500 p-4 text-center">
       <p>{{ error }}</p>
-      <el-button size="small" type="primary" @click="loadFiles()" class="mt-2">重试</el-button>
+      <el-button size="small" type="primary" @click="fileStore.loadFiles()" class="mt-2">重试</el-button>
     </div>
     
     <div v-else-if="files.length === 0" class="text-gray-500 p-4 text-center">
@@ -14,162 +14,47 @@
     </div>
     
     <ul v-else class="file-list list-none p-0 max-h-[500px] overflow-y-auto scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-gray-100">
-      <li v-for="item in files" :key="item.name" class="file-item border-b border-gray-100;">
-        <div 
-          class="flex items-center p-2 hover:bg-gray-100 cursor-pointer"
-          @click="handleItemClick(item)"
-        >
-          <!-- 使用图片替代内联SVG -->
-          <img v-if="item.type === 'directory'" :src="folderIcon" class="h-5 w-5 mr-2" alt="文件夹" />
-          <img v-else-if="isCodeFile(item)" :src="codeIcon" class="h-5 w-5 mr-2" alt="代码文件" />
-          <img v-else-if="isImageFile(item)" :src="imageIcon" class="h-5 w-5 mr-2" alt="图片文件" />
-          <img v-else-if="isDocumentFile(item)" :src="documentIcon" class="h-5 w-5 mr-2" alt="文档文件" />
-          <img v-else-if="isArchiveFile(item)" :src="archiveIcon" class="h-5 w-5 mr-2" alt="压缩文件" />
-          <img v-else :src="fileIcon" class="h-5 w-5 mr-2" alt="文件" />
-          
-          <span>{{ item.name }}</span>
-        </div>
-        
-        <!-- 递归显示子目录 -->
-        <div v-if="item.type === 'directory' && item.expanded" class="pl-4">
-          <FileExplorer 
-            :base-path="getItemPath(item)" 
-            :depth="depth + 1" 
-          />
-        </div>
-      </li>
+      <FileItem 
+        v-for="item in files" 
+        :key="item.path"
+        :item="item"
+        :depth="0"
+        @file-preview="(path) => emit('filePreview', path)"
+      />
     </ul>
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, defineProps, watch } from 'vue'
-import { ElMessage } from 'element-plus'
-import { apiService } from '../../services/api'
-import type {FileItem,FilePreview } from "@/types"
-// 导入图标
-import folderIcon from '@/assets/icons/folder.svg'
-import codeIcon from '@/assets/icons/code.svg'
-import imageIcon from '@/assets/icons/image.svg'
-import documentIcon from '@/assets/icons/document.svg'
-import archiveIcon from '@/assets/icons/archive.svg'
-import fileIcon from '@/assets/icons/file.svg'
-
+import { ref, onMounted, defineProps, watch, computed } from 'vue'
+import FileItem from './FileItem.vue'
+import {useWorkspaceStore} from "@/stores/workspace"
 const emit = defineEmits(['filePreview'])
-
+const fileStore=useWorkspaceStore()
 const props = defineProps({
   basePath: {
     type: String,
     default: ''
-  },
-  depth: {
-    type: Number,
-    default: 0
   }
 })
 
-const files = ref<FileItem[]>([])
-const loading = ref(false)
-const error = ref('')
-
+// 使用计算属性从store获取状态
+const files = computed(() => fileStore.files)
+const loading = computed(() => fileStore.loading)
+const error = computed(() => fileStore.error)
 // 监听basePath变化，重新加载文件
 watch(() => props.basePath, () => {
-  loadFiles()
+  fileStore.loadFiles()
 })
 
 onMounted(() => {
-  loadFiles()
+  fileStore.loadFiles()
 })
 
-// 加载文件列表
-async function loadFiles() {
-  loading.value = true
-  error.value = ''
-  
-  try {
-    const response = await apiService.getFiles(props.basePath)
-    console.log('Files:', response)
-    // 将后端返回的数据结构转换为前端需要的格式
-    files.value = response.map((item: any) => ({
-      name: item.name,
-      path: item.path,
-      type: item.type,
-      size: item.size,
-      modified: item.modified,
-      extension: item.extension,
-      expanded: false,
-      children: item.children
-    }))
-  } catch (err) {
-    console.error('Failed to load files:', err)
-    error.value = '加载文件失败'
-    ElMessage.error('加载文件失败')
-  } finally {
-    loading.value = false
-  }
-}
-
-// 处理文件/文件夹点击
-function handleItemClick(item: FileItem) {
-  if (item.type === 'directory') {
-    // 切换展开/折叠状态
-    item.expanded = !item.expanded
-  } else {
-    // 预览文件
-    previewFile(item)
-  }
-}
-
-// 获取完整路径
-function getItemPath(item: FileItem): string {
-  return props.basePath ? `${props.basePath}/${item.name}` : item.name
-}
 
 // 预览文件
-async function previewFile(item: FileItem) {
-  try {
-    
-    // 这里可以触发一个事件，通知父组件显示文件预览
-    // 或者使用全局状态管理来处理
-    console.log('Preview file:', item.path)
-    
-    // 添加事件触发
-    emit('filePreview', item.path)
-  } catch (err) {
-    console.error("发送文件预览事件失败:", err)
-  }
-}
 
-// 判断文件类型的函数
-function getFileExtension(item: FileItem): string {
-  if (item.extension) return item.extension.toLowerCase()
-  const parts = item.name.split('.')
-  return parts.length > 1 ? parts[parts.length - 1].toLowerCase() : ''
-}
 
-function isCodeFile(item: FileItem): boolean {
-  if (item.type !== 'file') return false
-  const codeExtensions = ['js', 'ts', 'jsx', 'tsx', 'vue', 'py', 'java', 'c', 'cpp', 'cs', 'go', 'rb', 'php', 'html', 'css', 'scss', 'less', 'json', 'xml', 'yaml', 'yml']
-  return codeExtensions.includes(getFileExtension(item))
-}
-
-function isImageFile(item: FileItem): boolean {
-  if (item.type !== 'file') return false
-  const imageExtensions = ['jpg', 'jpeg', 'png', 'gif', 'bmp', 'svg', 'webp', 'ico']
-  return imageExtensions.includes(getFileExtension(item))
-}
-
-function isDocumentFile(item: FileItem): boolean {
-  if (item.type !== 'file') return false
-  const docExtensions = ['pdf', 'doc', 'docx', 'xls', 'xlsx', 'ppt', 'pptx', 'txt', 'rtf', 'md', 'csv']
-  return docExtensions.includes(getFileExtension(item))
-}
-
-function isArchiveFile(item: FileItem): boolean {
-  if (item.type !== 'file') return false
-  const archiveExtensions = ['zip', 'rar', 'tar', 'gz', '7z', 'iso']
-  return archiveExtensions.includes(getFileExtension(item))
-}
 </script>
 
 <style scoped>

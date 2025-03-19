@@ -124,6 +124,7 @@ export const websocketService = {
         
       case 'tool_invocation_result':
         conversationStore.addToolInvocationResult(message.data)
+        
         break
         
       case 'done':
