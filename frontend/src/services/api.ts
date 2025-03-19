@@ -65,7 +65,7 @@ export const apiService = {
   },
   
   async getWorkspace() {
-    const response = await axios.get('/api/workspace')
+    const response = await apiClient.get('/api/workspace')
     return response.data
   },
   
