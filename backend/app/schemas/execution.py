@@ -49,7 +49,7 @@ class ExecutionResponse(BaseModel):
     conversation_id: str = Field(..., description="关联的对话ID")
 
     class Config:
-        orm_mode = True
+        from_attributes = True
 
 
 class ExecutionOutputType(str, enum.Enum):
@@ -79,7 +79,7 @@ class ExecutionOutput(BaseModel):
     created_at: datetime = Field(..., description="创建时间")
 
     class Config:
-        orm_mode = True
+        from_attributes = True
 
 
 class CancelExecutionRequest(BaseModel):
@@ -93,4 +93,4 @@ class ExecutionStatusResponse(BaseModel):
     outputs: List[ExecutionOutput] = Field([], description="执行输出列表")
 
     class Config:
-        orm_mode = True
+        from_attributes = True

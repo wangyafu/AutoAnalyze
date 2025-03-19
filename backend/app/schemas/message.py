@@ -29,7 +29,7 @@ class MessageResponse(MessageBase):
     created_at: datetime = Field(..., description="创建时间")
 
     class Config:
-        orm_mode = True
+        from_attributes = True
 
 
 class UserMessage(BaseModel):
