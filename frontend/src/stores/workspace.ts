@@ -8,6 +8,7 @@ export const useWorkspaceStore = defineStore('workspace', () => {
   const files = ref<FileItem[]>([])
   const loading = ref(false)
   const error = ref('')
+  const tag=ref("")
   function setWorkspace(path: string) {
     currentWorkspace.value = path
   }
@@ -58,6 +59,7 @@ export const useWorkspaceStore = defineStore('workspace', () => {
     loadFiles,
     files,
     loading,
-    error
+    error,
+    tag
   }
 })

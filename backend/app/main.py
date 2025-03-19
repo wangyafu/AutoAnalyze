@@ -10,11 +10,12 @@ from contextlib import asynccontextmanager
 # 将 app 文件夹的路径添加到 sys.path
 sys.path.append(str(Path(__file__).resolve().parent.parent))
 from app.api.router import api_router
+from app.api.status import tagManager
 from app.websocket.router import router as websocket_router
 from app.config import get_settings
 from app.db.base import init_db
 from app.services.model_service import initialize_model
-
+import uuid
 # 配置日志
 logging.basicConfig(
     level=logging.INFO,
@@ -26,7 +27,6 @@ logging.basicConfig(
 )
 
 logger = logging.getLogger(__name__)
-
 # 定义生命周期管理器
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -34,7 +34,9 @@ async def lifespan(app: FastAPI):
     # 初始化数据库
     logger.info("初始化数据库...")
     init_db()
-    
+    #初始化标识
+    tag=str(uuid.uuid4())
+    tagManager.setTag(tag)
     # 初始化模型
     logger.info("初始化模型...")
     model_initialized = await initialize_model()

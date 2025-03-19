@@ -49,3 +49,4 @@ class StatusResponse(BaseModel):
     model: ModelStatusResponse = Field(..., description="模型状态")
     workspace: Optional[str] = Field(None, description="当前工作目录")
     config: Dict[str, Any] = Field(..., description="当前配置")
+    tag:str

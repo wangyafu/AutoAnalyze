@@ -91,25 +91,12 @@ onMounted(async () => {
     systemStatus.modelConnected = status.model.status === 'connected'
     systemStatus.modelError = status.model.error || ''
 
-    // 检查工作目录一致性
-    if (workspaceStore.currentWorkspace) {
-      try {
-        const response = await apiService.getWorkspace()
-        if (response.status === 'success') {
-          if (response.workspace !== workspaceStore.currentWorkspace) {
-            console.log('工作目录不一致，清空前端存储')
-            workspaceStore.clearWorkspace()
-            ElMessage.warning('检测到工作目录已变更，请重新设置工作目录')
-          }
-        } else {
-          // 如果后端返回错误（比如工作目录未设置），也清空前端存储
-          workspaceStore.clearWorkspace()
-        }
-      } catch (error) {
-        console.error('Failed to get workspace:', error)
-        // 如果获取工作目录失败，清空前端存储
-        workspaceStore.clearWorkspace()
-      }
+    // 检查后端服务一致性
+    if(workspaceStore.tag!=status.tag){
+      //说明服务经过重启了
+      workspaceStore.tag=status.tag
+      workspaceStore.clearWorkspace()
+   
     }
   } catch (error) {
     systemStatus.backendConnected = false
