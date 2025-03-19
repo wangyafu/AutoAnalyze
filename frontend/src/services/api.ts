@@ -62,5 +62,12 @@ export const apiService = {
     console.log("createConversation",title)
     const response = await apiClient.post('/api/conversations', {"title":title })
     return response.data
-  }
+  },
+  
+  async getWorkspace() {
+    const response = await axios.get('/api/workspace')
+    return response.data
+  },
+  
+
 }

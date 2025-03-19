@@ -85,10 +85,32 @@ const systemStatus = reactive({
 
 onMounted(async () => {
   try {
+    // 获取系统状态
     const status = await apiService.getSystemStatus()
     systemStatus.backendConnected = !!(status.status)
     systemStatus.modelConnected = status.model.status === 'connected'
     systemStatus.modelError = status.model.error || ''
+
+    // 检查工作目录一致性
+    if (workspaceStore.currentWorkspace) {
+      try {
+        const response = await apiService.getWorkspace()
+        if (response.status === 'success') {
+          if (response.workspace !== workspaceStore.currentWorkspace) {
+            console.log('工作目录不一致，清空前端存储')
+            workspaceStore.clearWorkspace()
+            ElMessage.warning('检测到工作目录已变更，请重新设置工作目录')
+          }
+        } else {
+          // 如果后端返回错误（比如工作目录未设置），也清空前端存储
+          workspaceStore.clearWorkspace()
+        }
+      } catch (error) {
+        console.error('Failed to get workspace:', error)
+        // 如果获取工作目录失败，清空前端存储
+        workspaceStore.clearWorkspace()
+      }
+    }
   } catch (error) {
     systemStatus.backendConnected = false
     systemStatus.modelConnected = false

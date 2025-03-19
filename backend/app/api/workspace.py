@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Depends, HTTPException, Query
 from app.schemas.filesystem import WorkspaceRequest, WorkspaceResponse, FileItem, DirectoryItem, FilePreview, FileSystemItem
 from app.core.filesystem import filesystem_manager  # 导入 filesystem_manager 实例
-from app.services.filesystem_service import get_files,get_file_preview
+from app.services.filesystem_service import get_files, get_file_preview, get_workspace
 from typing import List, Optional, Union
 import os
 from app.utils.logger import get_logger
@@ -29,6 +29,22 @@ async def set_workspace_path(request: WorkspaceRequest):
         return WorkspaceResponse(
             status="success",
             workspace=result["workspace"]
+        )
+    except Exception as e:
+        return WorkspaceResponse(
+            status="error",
+            error=str(e)
+        )
+
+
+@router.get("", response_model=WorkspaceResponse)
+async def get_workspace_path():
+    """获取当前工作目录"""
+    try:
+        workspace = get_workspace()
+        return WorkspaceResponse(
+            status="success",
+            workspace=workspace
         )
     except Exception as e:
         return WorkspaceResponse(
