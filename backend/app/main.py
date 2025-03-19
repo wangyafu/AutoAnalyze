@@ -6,6 +6,7 @@ from fastapi.responses import JSONResponse
 from fastapi.staticfiles import StaticFiles
 from pathlib import Path
 import sys
+from contextlib import asynccontextmanager
 # 将 app 文件夹的路径添加到 sys.path
 sys.path.append(str(Path(__file__).resolve().parent.parent))
 from app.api.router import api_router
@@ -27,11 +28,39 @@ logging.basicConfig(
 
 logger = logging.getLogger(__name__)
 
+# 定义生命周期管理器
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    # 启动事件
+    # 初始化数据库
+    logger.info("初始化数据库...")
+    init_db()
+    
+    # 初始化模型
+    logger.info("初始化模型...")
+    model_initialized = await initialize_model()
+    if model_initialized:
+        logger.info("模型初始化成功")
+    else:
+        logger.warning("模型初始化失败，请检查配置")
+    
+    # 启动文件监视器
+    logger.info("启动文件监视器...")
+    start_file_watcher()
+    
+    logger.info("应用启动完成")
+    
+    yield  # 这里是应用运行的地方
+    
+    # 关闭事件
+    logger.info("应用关闭")
+
 # 创建应用实例
 app = FastAPI(
     title="AutoAnalyze",
     description="数据分析助手API",
-    version="1.0.0"
+    version="1.0.0",
+    lifespan=lifespan  # 使用生命周期管理器
 )
 
 # 配置CORS
@@ -76,32 +105,6 @@ def ensure_utils_dir():
 
 # 确保utils目录存在
 ensure_utils_dir()
-
-# 应用启动事件
-@app.on_event("startup")
-async def startup_event():
-    # 初始化数据库
-    logger.info("初始化数据库...")
-    init_db()
-    
-    # 初始化模型
-    logger.info("初始化模型...")
-    model_initialized = await initialize_model()
-    if model_initialized:
-        logger.info("模型初始化成功")
-    else:
-        logger.warning("模型初始化失败，请检查配置")
-    
-    # 启动文件监视器
-    logger.info("启动文件监视器...")
-    start_file_watcher()
-    
-    logger.info("应用启动完成")
-
-# 应用关闭事件
-@app.on_event("shutdown")
-async def shutdown_event():
-    logger.info("应用关闭")
 
 # 如果直接运行此文件，则启动应用
 if __name__ == "__main__":
