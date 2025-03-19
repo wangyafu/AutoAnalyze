@@ -8,24 +8,39 @@
         <div v-if="systemStatus.loading" class="flex justify-center">
           <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500"></div>
         </div>
-        <div v-else-if="systemStatus.connected" class="text-green-500 mb-4">
-          <div class="flex items-center justify-center">
-            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
-            </svg>
-            <span>系统已连接，模型状态正常</span>
-           
+        <div v-else>
+          <!-- 后端服务状态 -->
+          <div :class="systemStatus.backendConnected ? 'text-green-500' : 'text-red-500'" class="mb-2">
+            <div class="flex items-center justify-center">
+              <svg v-if="systemStatus.backendConnected" xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+              </svg>
+              <svg v-else xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+              </svg>
+              <span>后端服务: {{ systemStatus.backendConnected ? '已连接' : '连接失败' }}</span>
+            </div>
           </div>
-          <el-button type="primary" class="mt-2" @click="router.push('/settings')">修改配置</el-button>
-        </div>
-        <div v-else class="text-red-500 mb-4">
-          <div class="flex items-center justify-center">
-            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
-            </svg>
-            <span>系统连接异常，请前往设置页面配置</span>
+          
+          <div v-if="systemStatus.backendConnected">
+            <!-- 模型状态 -->
+          <div :class="systemStatus.modelConnected ? 'text-green-500' : 'text-red-500'" class="mb-4">
+            <div class="flex items-center justify-center">
+              <svg v-if="systemStatus.modelConnected" xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+              </svg>
+              <svg v-else xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+              </svg>
+              <span>模型状态: {{ systemStatus.modelConnected ? '正常' : '异常' }}</span>
+              <span v-if="systemStatus.modelError" class="ml-2 text-xs">({{ systemStatus.modelError }})</span>
+            </div>
           </div>
-          <el-button type="primary" class="mt-2" @click="router.push('/settings')">前往设置</el-button>
+          </div>
+          
+          <el-button type="primary" class="mt-2" @click="router.push('/settings')">
+            {{ (!systemStatus.backendConnected || !systemStatus.modelConnected) ? '前往设置' : '修改配置' }}
+          </el-button>
         </div>
       </div>
       
@@ -63,15 +78,20 @@ const workspaceStore = useWorkspaceStore()
 const conversationStore=useConversationStore()
 const systemStatus = reactive({
   loading: true,
-  connected: false
+  backendConnected: false,
+  modelConnected: false,
+  modelError: ''
 })
 
 onMounted(async () => {
   try {
     const status = await apiService.getSystemStatus()
-    systemStatus.connected = status.model.status === 'connected'
+    systemStatus.backendConnected = !!(status.status)
+    systemStatus.modelConnected = status.model.status === 'connected'
+    systemStatus.modelError = status.model.error || ''
   } catch (error) {
-    systemStatus.connected = false
+    systemStatus.backendConnected = false
+    systemStatus.modelConnected = false
     console.error('Failed to get system status:', error)
   } finally {
     systemStatus.loading = false
