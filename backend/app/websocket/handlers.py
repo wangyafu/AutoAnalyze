@@ -19,12 +19,7 @@ async def handle_message(message: str, websocket: WebSocket, manager: Connection
         # 根据消息类型分发处理
         if message_type == "user_message":
             await handle_user_message(data.get("data", {}), websocket, manager)
-        elif message_type == "subscribe_execution":
-            await handle_subscribe_execution(data.get("data", {}), websocket, manager)
-        elif message_type == "unsubscribe":
-            await handle_unsubscribe(data.get("data", {}), websocket, manager)
-        # elif message_type == "cancel_execution":
-        #     await handle_cancel_execution(data.get("data", {}), websocket, manager)
+
         else:
             # 未知消息类型
             await manager.send_personal_message({
@@ -91,59 +86,4 @@ async def handle_user_message(data: Dict[str, Any], websocket: WebSocket, manage
         }, websocket)
 
 
-async def handle_subscribe_execution(data: Dict[str, Any], websocket: WebSocket, manager: ConnectionManager):
-    """处理执行订阅"""
-    execution_id = data.get("execution_id")
-    
-    if not execution_id:
-        await manager.send_personal_message({
-            "type": "error",
-            "data": {
-                "code": "invalid_request",
-                "message": "缺少必要参数: execution_id"
-            }
-        }, websocket)
-        return
-    
-    # 订阅执行结果
-    manager.subscribe_execution(execution_id, websocket)
-    
-    # 确认订阅成功
-    await manager.send_personal_message({
-        "type": "subscription_confirmed",
-        "data": {
-            "topic": f"execution_{execution_id}",
-            "message": "订阅成功"
-        }
-    }, websocket)
-
-
-async def handle_unsubscribe(data: Dict[str, Any], websocket: WebSocket, manager: ConnectionManager):
-    """处理取消订阅"""
-    topic = data.get("topic")
-    
-    if not topic or not topic.startswith("execution_"):
-        await manager.send_personal_message({
-            "type": "error",
-            "data": {
-                "code": "invalid_request",
-                "message": "无效的主题格式"
-            }
-        }, websocket)
-        return
-    
-    # 从主题中提取执行ID
-    execution_id = topic[10:]  # 去掉 "execution_" 前缀
-    
-    # 取消订阅
-    manager.unsubscribe_execution(execution_id, websocket)
-    
-    # 确认取消订阅成功
-    await manager.send_personal_message({
-        "type": "unsubscription_confirmed",
-        "data": {
-            "topic": topic,
-            "message": "已取消订阅"
-        }
-    }, websocket)
 

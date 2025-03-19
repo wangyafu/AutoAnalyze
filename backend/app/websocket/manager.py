@@ -49,42 +49,11 @@ class ConnectionManager:
         if websocket not in self.execution_subscribers[execution_id]:
             self.execution_subscribers[execution_id].append(websocket)
     
-    def unsubscribe_execution(self, execution_id: str, websocket: WebSocket):
-        """取消订阅执行结果"""
-        if execution_id in self.execution_subscribers and websocket in self.execution_subscribers[execution_id]:
-            self.execution_subscribers[execution_id].remove(websocket)
-            if not self.execution_subscribers[execution_id]:
-                del self.execution_subscribers[execution_id]
     
-    async def broadcast_execution_update(self, execution_id: str, update: dict):
-        """广播执行更新到所有订阅者"""
-        if execution_id in self.execution_subscribers:
-            message = {
-                "type": "execution_update",
-                "data": update
-            }
-            for connection in self.execution_subscribers[execution_id]:
-                await self.send_personal_message(message, connection)
     
-    async def broadcast_execution_output(self, execution_id: str, output: dict):
-        """广播执行输出到所有订阅者"""
-        if execution_id in self.execution_subscribers:
-            message = {
-                "type": "execution_output",
-                "data": output
-            }
-            for connection in self.execution_subscribers[execution_id]:
-                await self.send_personal_message(message, connection)
+
     
-    async def broadcast_execution_complete(self, execution_id: str, data: dict):
-        """广播执行完成到所有订阅者"""
-        if execution_id in self.execution_subscribers:
-            message = {
-                "type": "execution_complete",
-                "data": data
-            }
-            for connection in self.execution_subscribers[execution_id]:
-                await self.send_personal_message(message, connection)
+    
     
     async def broadcast_filesystem_change(self, change_data: dict):
         """广播文件系统变更"""
