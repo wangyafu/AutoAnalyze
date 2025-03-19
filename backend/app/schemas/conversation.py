@@ -20,7 +20,7 @@ class ConversationResponse(ConversationBase):
     created_at: datetime = Field(..., description="创建时间")
 
     class Config:
-        orm_mode = True
+        from_attributes = True
 
 
 class ConversationDetail(ConversationResponse):
@@ -28,7 +28,7 @@ class ConversationDetail(ConversationResponse):
     messages: List["MessageResponse"] = Field([], description="消息列表")
 
     class Config:
-        orm_mode = True
+        from_attributes = True
 
 
 class ConversationList(BaseModel):
@@ -39,4 +39,4 @@ class ConversationList(BaseModel):
     limit: int = Field(..., description="限制数量")
 
     class Config:
-        orm_mode = True
+        from_attributes = True
