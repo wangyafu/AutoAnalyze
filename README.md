@@ -40,7 +40,7 @@ cd backend
 uv sync
 uv run app/main.py
 ```
-## 注册IPython内核
+### 注册IPython内核
 为了实现图像输出、实时显示代码输出、取消代码执行等功能，本项目在v0.02版本中引入了jupyter_client库连接IPython内核。如果你希望直接使用上一步中安装的Python解释器，你可以在backend路径下输入以下命令:
 ```shell
 # Linux/macOS
@@ -62,4 +62,4 @@ python -m ipykernel install --user #将本项目所用的python解释器注册�
 我本人测试所使用的大模型是qwen-plus。
 
 ## 额外说明
-本项目绝大部分代码由DeepSeek-R1和Claude完成，logo则由Gemini 2.0 Flash Experimental生成。感谢这些AI让我可以在几天就完成这个项目的雏形。
+本项目绝大部分代码由DeepSeek-R1和Claude完成，logo则由Gemini 2.0 Flash Experimental生成。感谢这些AI让我可以在几天内就完成这个项目的雏形。
