@@ -251,22 +251,33 @@ plt.rcParams['axes.unicode_minus'] = False  # 解决负号显示问题"""
             bool: 是否成功取消
         """
         if execution_id not in self.executions:
+            logger.warning(f"尝试取消不存在的执行: {execution_id}")
             return False
 
         execution = self.executions[execution_id]
         if execution['status'] not in ['running', 'pending']:
+            logger.info(f"尝试取消非运行状态的执行: {execution_id}, 当前状态: {execution['status']}")
             return False
 
         # 中断内核执行
-        conversation_id = execution['conversation_id']
-        if self.kernel_client:
-            await self.kernel_client.interrupt_kernel()
+        try:
+            if self.kernel_client:
+                logger.info(f"正在中断内核执行: {execution_id}")
+                await self.kernel_client.interrupt_kernel()
+        except Exception as e:
+            logger.error(f"中断内核执行时出错: {str(e)}")
 
         # 取消执行任务
         if execution_id in self.execution_tasks:
             task = self.execution_tasks[execution_id]
             if not task.done():
+                logger.info(f"正在取消执行任务: {execution_id}")
                 task.cancel()
+                try:
+                    # 等待任务取消完成
+                    await asyncio.wait_for(asyncio.shield(task), timeout=2.0)
+                except (asyncio.CancelledError, asyncio.TimeoutError):
+                    pass
 
         # 更新状态为取消
         execution['status'] = 'cancelled'
@@ -275,6 +286,7 @@ plt.rcParams['axes.unicode_minus'] = False  # 解决负号显示问题"""
 
         # 添加取消消息到输出
         await self._add_output(execution_id, '执行已取消', 'system')
+        logger.info(f"执行已成功取消: {execution_id}")
 
         return True
 

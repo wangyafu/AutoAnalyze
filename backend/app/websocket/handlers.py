@@ -19,7 +19,8 @@ async def handle_message(message: str, websocket: WebSocket, manager: Connection
         # 根据消息类型分发处理
         if message_type == "user_message":
             await handle_user_message(data.get("data", {}), websocket, manager)
-
+        elif message_type == "cancel_execution":
+            await handle_cancel_execution(data.get("data", {}), websocket, manager)
         else:
             # 未知消息类型
             await manager.send_personal_message({
@@ -81,6 +82,56 @@ async def handle_user_message(data: Dict[str, Any], websocket: WebSocket, manage
             "data": {
                 "code": "message_processing_error",
                 "message": "处理消息时出错",
+                "details": str(e)
+            }
+        }, websocket)
+
+
+async def handle_cancel_execution(data: Dict[str, Any], websocket: WebSocket, manager: ConnectionManager):
+    """处理取消代码执行请求"""
+    execution_id = data.get("execution_id")
+    
+    if not execution_id:
+        await manager.send_personal_message({
+            "type": "error",
+            "data": {
+                "code": "invalid_request",
+                "message": "缺少必要参数: execution_id"
+            }
+        }, websocket)
+        return
+    
+    try:
+        # 导入执行引擎
+        from ..core.jupyter_execution import jupyter_execution_engine
+        
+        # 取消执行
+        success = await jupyter_execution_engine.cancel_execution(execution_id)
+        
+        # 发送取消结果
+        if success:
+            await manager.send_personal_message({
+                "type": "execution_cancelled",
+                "data": {
+                    "execution_id": execution_id,
+                    "message": "代码执行已取消"
+                }
+            }, websocket)
+        else:
+            await manager.send_personal_message({
+                "type": "error",
+                "data": {
+                    "code": "cancel_failed",
+                    "message": "取消执行失败，可能执行ID不存在或执行已完成"
+                }
+            }, websocket)
+    except Exception as e:
+        logger.exception(f"取消代码执行时出错: {str(e)}")
+        await manager.send_personal_message({
+            "type": "error",
+            "data": {
+                "code": "cancel_error",
+                "message": "取消执行时出错",
                 "details": str(e)
             }
         }, websocket)
