@@ -40,13 +40,13 @@
           <div class="text-sm  mb-1">执行工具: {{ message.metadata?.function }}</div>
           
           <!-- 代码执行工具 -->
-          <div v-if="message.metadata?.function === 'exec_code'" class="markdown-body"
+          <!-- <div v-if="message.metadata?.function === 'exec_code'" class="markdown-body"
            v-html="fotmatCode(message.metadata?.arguments?.code)">
 
-          </div>
+          </div> -->
           
           <!-- 读取目录工具 -->
-          <div v-else-if="message.metadata?.function === 'read_directory'" class="directory-info">
+          <div v-if="message.metadata?.function === 'read_directory'" class="directory-info">
             <div class="markdown-body p-3 bg-white border border-gray-200 rounded-md">
               <p class="text-sm  mb-2">📂 正在读取目录：</p>
               <p class="font-mono text-blue-600 bg-gray-50 px-2 py-1 rounded inline-block">
@@ -80,8 +80,33 @@
       </div>
     </div>
     
+    <!-- 代码执行开始 -->
+    <div v-else-if="message.type === 'code_execution_start'" class="code-execution-message">
+      <div class="flex items-start">
+        <div class="code-avatar">
+          <div class="w-8 h-8 rounded-full bg-blue-500 flex items-center justify-center text-white">
+            <span>C</span>
+          </div>
+        </div>
+        <div class="message-content ml-3 p-3 bg-gray-50 border border-gray-200 rounded-lg">
+          <div class="text-sm mb-1">代码执行:</div>
+          
+          <!-- 使用整合的代码执行组件 -->
+          <code-execution
+            :execution-id="message.metadata.execution_id"
+            :code="message.metadata.code"
+            :status="useCodeExecutionStore().executionStatus[message.metadata.execution_id]?.status"
+            :outputs="useCodeExecutionStore().executionStatus[message.metadata.execution_id]?.output || []"
+            :images="useCodeExecutionStore().executionStatus[message.metadata.execution_id]?.images || []"
+            :error="useCodeExecutionStore().executionStatus[message.metadata.execution_id]?.error"
+            @cancel="cancelExecution"
+          />
+        </div>
+      </div>
+    </div>
+    
     <!-- 工具调用结果 -->
-    <div v-else-if="message.type === 'tool_result'" class="tool-result">
+    <div v-else-if="message.type === 'tool_result'&&message.metadata.function!='exec_code'" class="tool-result">
       <div class="flex items-start">
         <div class="tool-avatar">
           <div class="w-8 h-8 rounded-full bg-gray-500 flex items-center justify-center text-white">
@@ -91,23 +116,8 @@
         <div class="message-content ml-3 p-3 bg-gray-50 border border-gray-200 rounded-lg">
           <div class="text-sm text-gray-500 mb-1">工具执行结果:</div>
           
-          <!-- 代码执行结果 -->
-          <div v-if="message.metadata?.function === 'exec_code'" class="code-result">
-            <div v-if="message.metadata?.result?.status === 'success'" class="bg-gray-100 p-2 rounded-md">
-              <div v-if="message.metadata.result.stdout" class="mb-2">
-                <div class="text-xs text-gray-500 mb-1">标准输出:</div>
-                <pre class="bg-white p-2 rounded border text-sm overflow-x-auto">{{ message.metadata.result.stdout }}</pre>
-              </div>
-              <div v-if="message.metadata.result.stderr" class="mb-2">
-                <div class="text-xs text-gray-500 mb-1">标准错误:</div>
-                <pre class="bg-white p-2 rounded border text-sm text-red-500 overflow-x-auto">{{ message.metadata.result.stderr }}</pre>
-              </div>
-            </div>
-            <div v-else class="bg-red-50 p-2 rounded-md text-red-500">
-              <p>执行错误: {{ message.metadata.result.message }}</p>
-            </div>
-          </div>
-          <div v-else-if="message.metadata?.function==='read_directory'" class="tool-other-result">
+          
+          <div v-if="message.metadata?.function==='read_directory'" class="tool-other-result">
             <div v-if="message.metadata?.result?.status === 'success'" class="bg-green-50 p-2 rounded-md text-green-600">
             <p>目录读取成功</p>
           </div>
@@ -139,6 +149,9 @@
 import { defineProps } from 'vue'
 import type { Message } from '../../stores/conversation'
 import { renderMarkdown } from '../../utils/markdown'
+import { websocketService } from '../../services/websocket'
+import { useCodeExecutionStore } from '../../stores/codeExecution'
+import CodeExecution from './CodeExecution.vue'
 
 const props = defineProps({
   message: {
@@ -156,6 +169,14 @@ function formatMessage(content: string): string {
     console.error('Markdown rendering failed:', error)
     return content
   }
+}
+
+// 取消代码执行
+function cancelExecution(executionId: string) {
+  websocketService.socket?.send(JSON.stringify({
+    type: 'cancel_execution',
+    data: { execution_id: executionId }
+  }))
 }
 function fotmatCode(code:string):string{
   console.log("原始代码为：",code)

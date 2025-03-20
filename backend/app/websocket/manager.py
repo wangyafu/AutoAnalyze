@@ -1,7 +1,8 @@
 from fastapi import WebSocket
 from typing import Dict, List, Any
 import json
-
+from app.utils.logger import get_logger
+logger=get_logger(__name__)
 
 class ConnectionManager:
     """WebSocket连接管理器"""
@@ -63,6 +64,10 @@ class ConnectionManager:
         }
         await self.broadcast(message)
     async def broadcast_message(self,message:dict):
+        if "code" in message["type"]:
+            # logger.info(message)
+            # print(message)
+            pass
         await self.broadcast(message)
 
 

@@ -144,9 +144,9 @@ def get_files(path: Optional[str] = None) -> List[FileSystemItem]:
     # 验证是否为目录
     if not os.path.isdir(abs_path):
         raise Exception(f"路径不是目录: {path}")
-    
+    result=_list_directory(abs_path)
     # 递归获取目录内容
-    return _list_directory(abs_path)
+    return result
 
 def get_file_preview(path: str, max_size: int = 100000) -> FilePreview:
     """

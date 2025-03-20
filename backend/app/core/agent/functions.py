@@ -1,19 +1,16 @@
 import os
-import sys
-import io
-import traceback
+
 from typing import Dict, List, Optional, Any, Union
 import pandas as pd
 
-import asyncio
+
 from app.core.filesystem import FileSystemManager
 import logging
-from app.core.execution import execution_engine
-import uuid
+
 logger = logging.getLogger(__name__)
 # 获取文件系统管理器实例
 fs_manager = FileSystemManager()
-
+from app.core.agent.exec_code import exec_code
 tools = [
     {
         "type": "function",
@@ -167,35 +164,6 @@ async def read_files(filenames:list[str])->list[dict]:
         result=await read_file(name)
         results.append(result)
     return results
-async def exec_code(code: str, conversation_id: str) -> Dict[str, Any]:  # 新增参数
-
-    
-    try:
-        if not fs_manager.workspace:
-            return {"status": "error", "message": "工作目录未设置"}
-            
-        execution_id = execution_engine.execute_code(
-            code=code,
-            execution_id=str(uuid.uuid4()),
-            conversation_id=conversation_id,  # 传递会话ID
-            workspace=fs_manager.workspace
-        )
-        
-        # 等待执行完成（实现异步轮询逻辑）
-        while True:
-            status = execution_engine.get_execution_status(execution_id)
-            if status["status"] not in ["running", "pending"]:
-                break
-            await asyncio.sleep(0.1)
-            
-        return {
-            "status": "success" if status["status"] == "completed" else "error",
-            "stdout": "\n".join(o["content"] for o in status["output"] if o["type"] == "stdout"),
-            "stderr": "\n".join(o["content"] for o in status["output"] if o["type"] in ["stderr", "error"])
-        }
-        
-    except Exception as e:
-        return {"status": "error", "message": str(e)}
 
 class FunctionExecutor:
     def __init__(self,conversation_id:str):

@@ -20,3 +20,21 @@ export interface FileItem {
     encoding?: string
   }
   
+  export interface OutputItem {
+    type: string
+    content: string
+  }
+  
+  export interface ImageItem {
+    type: string
+    format: string
+    data: string
+  }
+  
+  export interface ExecutionStatus {
+    status: 'running' | 'completed' | 'error'
+    output: OutputItem[]
+    images: ImageItem[]
+    error?: string
+  }
+  

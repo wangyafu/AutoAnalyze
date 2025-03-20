@@ -7,6 +7,8 @@ import threading
 import time
 import os
 from app.utils.logger import get_logger
+from jupyter_client import KernelManager
+from queue import Empty
 
 logger = get_logger(__name__)
 
@@ -16,22 +18,41 @@ class ExecutionEngine:
     def __init__(self):
         self.executions: Dict[str, Dict[str, Any]] = {}
         self.output_callbacks: Dict[str, Callable] = {}
-        self.environments: Dict[str, Dict[str, Any]] = {}  # 新增会话环境存储
-        self.lock = threading.Lock()  # 添加线程锁
+        self.environments: Dict[str, Dict[str, Any]] = {}  # 会话环境存储
+        self.kernels: Dict[str, Any] = {}  # 存储每个会话的内核
+        self.lock = threading.Lock()  # 线程锁
+        
+    def _create_kernel(self, conversation_id: str) -> None:
+        """为会话创建新的Jupyter内核"""
+        if conversation_id not in self.kernels:
+            km = KernelManager()
+            km.start_kernel()
+            client = km.client()
+            client.start_channels()
+            
+            self.kernels[conversation_id] = {
+                'manager': km,
+                'client': client
+            }
 
-    def execute_code(self, code: str, execution_id: str, conversation_id: str, workspace: Optional[str] = None) -> str:
+    async def execute_code(self, code: str, execution_id: str, conversation_id: str, workspace: Optional[str] = None) -> str:
         """执行代码并返回执行ID
         
         Args:
             code: 要执行的代码
             execution_id: 执行ID，如果为None则自动生成
             conversation_id: 关联的对话ID
+            workspace: 工作目录
             
         Returns:
             execution_id: 执行ID
         """
         if not execution_id:
             execution_id = str(uuid.uuid4())
+            
+        # 确保会话有对应的内核
+        with self.lock:
+            self._create_kernel(conversation_id)
             
         # 创建执行记录
         self.executions[execution_id] = {
@@ -42,13 +63,14 @@ class ExecutionEngine:
             "end_time": None,
             "output": [],
             "error": None,
-            "thread": None
+            "thread": None,
+            "images": []  # 存储生成的图片
         }
         
-        # 在新线程中执行代码（增加workspace参数）
+        # 在新线程中执行代码
         thread = threading.Thread(
             target=self._execute_code_thread,
-            args=(code, execution_id, workspace,conversation_id)  # 新增workspace参数
+            args=(code, execution_id, workspace, conversation_id)
         )
         thread.daemon = True
         thread.start()
@@ -58,97 +80,80 @@ class ExecutionEngine:
         return execution_id
     
     def _execute_code_thread(self, code: str, execution_id: str, workspace: Optional[str], conversation_id: str):
-        with self.lock:
-            if conversation_id not in self.environments:
-                self.environments[conversation_id] = {
-                    "globals": {"__name__": "__main__", "__builtins__": __builtins__},
-                    "locals": {}
-                }
-                
-        env = self.environments[conversation_id]
+        """在独立线程中执行代码"""
+        kernel = self.kernels[conversation_id]
+        client = kernel['client']
         
         try:
-            # 切换工作目录（保留）
+            # 切换工作目录
             original_cwd = os.getcwd()
             if workspace:
                 os.chdir(workspace)
-
-            # 合并环境变量（关键修改）
-            global_vars = {
-                **env["globals"],  # 继承会话环境
-                "__name__": "__main__",
-                "__builtins__": __builtins__,
-                "print": lambda *args, **kwargs: self._handle_print(execution_id, *args, **kwargs)
-            }
-            local_vars = env["locals"]  # 直接使用会话的本地变量
-
-            # 重定向标准输出和错误（保持不变）
-            original_stdout = sys.stdout
-            original_stderr = sys.stderr
+                # 设置内核的工作目录
+                setup_code = f"import os; os.chdir('{workspace.replace('\\', '/')}')"
+                client.execute(setup_code, silent=True)
             
-            class OutputRedirector:
-                def __init__(self, execution_engine, execution_id, output_type="stdout"):
-                    self.execution_engine = execution_engine
-                    self.execution_id = execution_id
-                    self.output_type = output_type
-                    self.buffer = ""
-                
-                def write(self, text):
-                    self.buffer += text
-                    if "\n" in self.buffer:
-                        lines = self.buffer.split("\n")
-                        for line in lines[:-1]:
-                            self.execution_engine._add_output(self.execution_id, line, self.output_type)
-                        self.buffer = lines[-1]
-                    return len(text)
-                
-                def flush(self):
-                    if self.buffer:
-                        self.execution_engine._add_output(self.execution_id, self.buffer, self.output_type)
-                        self.buffer = ""
+            # 发送代码到内核执行
+            msg_id = client.execute(code)
             
-            sys.stdout = OutputRedirector(self, execution_id, "stdout")
-            sys.stderr = OutputRedirector(self, execution_id, "stderr")
+            # 处理执行结果
+            while True:
+                try:
+                    msg = client.get_iopub_msg(timeout=1)
+                    msg_type = msg['header']['msg_type']
+                    content = msg['content']
+                    
+                    if msg_type == 'stream':
+                        # 处理标准输出/错误
+                        stream_name = content['name']  # stdout或stderr
+                        text = content['text']
+                        self._add_output(execution_id, text, stream_name)
+                        
+                    elif msg_type == 'display_data' or msg_type == 'execute_result':
+                        # 处理富文本输出（包括图片）
+                        data = content['data']
+                        if 'image/png' in data:
+                            # 保存图片数据
+                            self.executions[execution_id]['images'].append({
+                                'data': data['image/png'],
+                                'format': 'png'
+                            })
+                        elif 'text/plain' in data:
+                            self._add_output(execution_id, data['text/plain'], 'output')
+                            
+                    elif msg_type == 'error':
+                        # 处理错误信息
+                        error_msg = '\n'.join(content['traceback'])
+                        self._add_output(execution_id, error_msg, 'error')
+                        self.executions[execution_id]['status'] = 'error'
+                        self.executions[execution_id]['error'] = error_msg
+                        break
+                        
+                    elif msg_type == 'status' and content['execution_state'] == 'idle':
+                        # 执行完成
+                        if self.executions[execution_id]['status'] != 'error':
+                            self.executions[execution_id]['status'] = 'completed'
+                        break
+                        
+                except Empty:
+                    continue
+                except Exception as e:
+                    logger.error(f"处理执行结果时出错: {str(e)}")
+                    self.executions[execution_id]['status'] = 'error'
+                    self.executions[execution_id]['error'] = str(e)
+                    break
             
-            try:
-                # 单次编译执行（关键修改）
-                compiled_code = compile(code, f"<execution_{execution_id}>", "exec")
-                exec(compiled_code, global_vars, local_vars)  # 使用合并后的环境
-                
-                # 刷新输出（保持不变）
-                sys.stdout.flush()
-                sys.stderr.flush()
-                
-                # 更新环境状态（新增）
-                env["globals"].update(global_vars)
-                env["locals"].update(local_vars)
-                
-                # 更新执行状态为完成
-                self.executions[execution_id]["status"] = "completed"
-                self.executions[execution_id]["end_time"] = time.time()
-                
-            except Exception as e:
-                # 捕获执行过程中的异常
-                error_msg = f"执行错误: {str(e)}\n{traceback.format_exc()}"
-                self._add_output(execution_id, error_msg, "error")
-                
-                self.executions[execution_id]["status"] = "error"
-                self.executions[execution_id]["error"] = error_msg
-                self.executions[execution_id]["end_time"] = time.time()
+            self.executions[execution_id]['end_time'] = time.time()
             
-            finally:
-                # 恢复标准输出和标准错误
-                sys.stdout = original_stdout
-                sys.stderr = original_stderr
-                if workspace:
-                    os.chdir(original_cwd)  # 恢复原始目录
-                
         except Exception as e:
-            # 捕获线程中的异常
             logger.error(f"执行线程异常: {str(e)}")
-            self.executions[execution_id]["status"] = "error"
-            self.executions[execution_id]["error"] = f"执行线程异常: {str(e)}"
-            self.executions[execution_id]["end_time"] = time.time()
+            self.executions[execution_id]['status'] = 'error'
+            self.executions[execution_id]['error'] = f"执行线程异常: {str(e)}"
+            self.executions[execution_id]['end_time'] = time.time()
+            
+        finally:
+            if workspace:
+                os.chdir(original_cwd)
     
     def _handle_print(self, execution_id: str, *args, **kwargs):
         """处理代码中的print函数调用"""

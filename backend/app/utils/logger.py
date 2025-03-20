@@ -14,7 +14,7 @@ LOG_LEVELS = {
 
 def setup_logging(
     level: Union[int, str] = logging.INFO,
-    log_file: Optional[str] = "app.log",
+    log_file: Optional[str] = "app.log",#app.log
     log_format: Optional[str] = None,
     log_dir: Optional[Union[str, Path]] = None
 ) -> None:

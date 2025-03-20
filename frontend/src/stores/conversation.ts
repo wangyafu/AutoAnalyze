@@ -4,7 +4,7 @@ import { apiService } from '../services/api'
 import { useWorkspaceStore } from './workspace'
 export interface Message {
   id: string
-  type: 'user' | 'assistant' | 'tool_start' | 'tool_result'
+  type: 'user' | 'assistant' | 'tool_start' | 'tool_result' | 'code_execution_start'
   content: string
   timestamp: Date
   metadata?: any
@@ -95,6 +95,22 @@ export const useConversationStore = defineStore('conversation', () => {
     loading.value = value
   }
   
+  // 添加代码执行开始消息
+  function addCodeExecutionStart(data: { execution_id: string; code: string }) {
+    const message: Message = {
+      id: `code-exec-start-${data.execution_id}`,
+      type: 'code_execution_start',
+      content: '',
+      timestamp: new Date(),
+      metadata: {
+        execution_id: data.execution_id,
+        code: data.code
+      }
+    }
+    
+    messages.value.push(message)
+  }
+  
   return {
     messages,
     loading,
@@ -104,6 +120,7 @@ export const useConversationStore = defineStore('conversation', () => {
     addAssistantMessage,
     addToolInvocationStart,
     addToolInvocationResult,
-    setLoading
+    setLoading,
+    addCodeExecutionStart
   }
 })

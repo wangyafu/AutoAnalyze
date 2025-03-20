@@ -6,6 +6,8 @@ requires-python = ">=3.8"
 dependencies = [
     "aiohttp>=3.10.11",
     "fastapi>=0.115.11",
+    "ipykernel>=6.29.5",
+    "jupyter-client>=8.6.3",
     "matplotlib>=3.7.5",
     "pandas>=2.0.3",
     "sqlalchemy>=2.0.39",

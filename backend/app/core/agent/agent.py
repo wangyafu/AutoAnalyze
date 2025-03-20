@@ -142,19 +142,7 @@ class Agent:
             )
         
         
-    async def _handle_function_call(self, function_call: Dict[str, Any]) -> None:
-        """处理函数调用并记录结果到消息历史"""
-        # 执行函数调用
-        func_name = function_call["name"]
-        func_args = function_call["arguments"]
-        result = await self._execute_function(func_name, func_args)
-
-        
-        self.messages.append({
-            "role": "tool",
-            "name": func_name,
-            "content": str(result)
-        })
+   
     
     async def close(self):
         """关闭代理使用的资源"""
