@@ -1,5 +1,5 @@
 from pydantic import BaseModel, Field, RootModel
-from typing import List, Optional,Union
+from typing import List, Optional,Union,Dict
 from datetime import datetime
 
 
@@ -49,3 +49,6 @@ class FilePreview(BaseModel):
     is_binary: bool = Field(False, description="是否为二进制文件")
     is_truncated: bool = Field(False, description="内容是否被截断")
     encoding: Optional[str] = Field(None, description="文件编码")
+    preview_type: Optional[str] = Field("text", description="预览类型，如'text'、'image'、'excel'等")
+    base64_data: Optional[str] = Field(None, description="Base64编码的文件数据，用于图片等二进制文件")
+    structured_data: Optional[Dict] = Field(None, description="结构化数据，用于Excel等表格文件")

@@ -18,6 +18,12 @@ export interface FileItem {
     is_binary: boolean
     is_truncated: boolean
     encoding?: string
+    preview_type?: string
+    base64_data?: string
+    structured_data?: {
+      columns: string[]
+      data: any[][]
+    }
   }
   
   export interface OutputItem {

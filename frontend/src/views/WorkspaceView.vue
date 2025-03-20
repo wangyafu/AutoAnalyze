@@ -35,7 +35,40 @@
       width="60%"
       destroy-on-close
     >
-      <pre class="whitespace-pre-wrap break-words">{{ previewFile?.content }}</pre>
+      <!-- 文本文件预览 -->
+      <pre v-if="previewFile?.preview_type === 'text'" class="whitespace-pre-wrap break-words">{{ previewFile?.content }}</pre>
+      
+      <!-- 图片预览 -->
+      <div v-else-if="previewFile?.preview_type === 'image'" class="text-center">
+        <img v-if="previewFile?.base64_data" :src="`data:image/${getImageType(previewFile.name)};base64,${previewFile.base64_data}`" class="max-w-full max-h-[70vh]" />
+        <p v-else class="text-gray-500">无法预览图片</p>
+      </div>
+      
+      <!-- Excel/CSV预览 -->
+      <div v-else-if="['excel', 'csv'].includes(previewFile?.preview_type || '')" class="overflow-x-auto">
+        <table v-if="previewFile?.structured_data" class="min-w-full border-collapse border border-gray-300">
+          <thead>
+            <tr>
+              <th v-for="(column, index) in previewFile.structured_data.columns" :key="index" class="border border-gray-300 px-4 py-2 bg-gray-100">
+                {{ column }}
+              </th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr v-for="(row, rowIndex) in previewFile.structured_data.data" :key="rowIndex">
+              <td v-for="(cell, cellIndex) in row" :key="cellIndex" class="border border-gray-300 px-4 py-2">
+                {{ cell }}
+              </td>
+            </tr>
+          </tbody>
+        </table>
+        <p v-else class="text-gray-500">无法预览表格数据</p>
+      </div>
+      
+      <!-- 其他文件类型 -->
+      <div v-else class="text-center text-gray-500">
+        <p>{{ previewFile?.content || '无法预览此类型文件' }}</p>
+      </div>
     </el-dialog>
   </div>
 </template>
@@ -78,7 +111,7 @@ async function handleFilePreview(path: string) {
     
       const data = response as FilePreview
       console.log('File preview:', data)
-      if (data.is_binary) {
+      if (data.is_binary && !data.preview_type) {
         ElMessage.warning('二进制文件无法预览')
         return
       }
@@ -87,6 +120,28 @@ async function handleFilePreview(path: string) {
     
   } catch (error) {
     ElMessage.error('文件预览失败')
+  }
+}
+
+// 根据文件名获取图片类型
+function getImageType(filename: string): string {
+  if (!filename) return 'png'
+  const extension = filename.split('.').pop()?.toLowerCase() || ''
+  
+  switch (extension) {
+    case 'jpg':
+    case 'jpeg':
+      return 'jpeg'
+    case 'png':
+      return 'png'
+    case 'gif':
+      return 'gif'
+    case 'svg':
+      return 'svg+xml'
+    case 'webp':
+      return 'webp'
+    default:
+      return 'png'
   }
 }
 

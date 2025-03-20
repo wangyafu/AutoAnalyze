@@ -13,7 +13,9 @@ from app.core.filesystem import filesystem_manager
 from app.websocket.manager import manager
 from datetime import datetime
 from app.utils.logger import get_logger
-
+import csv
+import io
+import pandas as pd
 logger = get_logger(__name__)
 
 def set_workspace(path: str) -> str:
@@ -177,15 +179,19 @@ def get_file_preview(path: str, max_size: int = 100000) -> FilePreview:
     file_size = os.path.getsize(abs_path)
     file_name = os.path.basename(abs_path)
     file_type = get_file_type(abs_path)
-    extension = os.path.splitext(file_name)[1].lstrip('.')
+    extension = os.path.splitext(file_name)[1].lower().lstrip('.')
     
     # 判断是否为文本文件
     is_text = is_text_file(abs_path)
     
-    # 预览内容
+    # 预览内容和类型
     preview_content = ""
     truncated = False
+    preview_type = "text"  # 默认为文本预览
+    base64_data = None
+    structured_data = None
     
+    # 根据文件类型处理预览
     if is_text:
         # 文本文件，读取内容
         try:
@@ -197,8 +203,59 @@ def get_file_preview(path: str, max_size: int = 100000) -> FilePreview:
                     preview_content = f.read()
         except Exception as e:
             raise Exception(f"读取文件失败: {str(e)}")
+    elif file_type == "image":
+        # 图片文件，转换为Base64
+        preview_type = "image"
+        try:
+            import base64
+            # 限制图片大小
+            if file_size > 5 * 1024 * 1024:  # 5MB限制
+                preview_content = "[图片文件过大，无法预览]"
+                truncated = True
+            else:
+                with open(abs_path, 'rb') as f:
+                    image_data = f.read()
+                    base64_data = base64.b64encode(image_data).decode('utf-8')
+                    preview_content = "[图片文件]"
+        except Exception as e:
+            preview_content = f"[图片文件读取失败: {str(e)}]"
+    elif extension in ["csv", "xls", "xlsx"]:
+        # 表格文件，解析为结构化数据
+        preview_type = "excel" if extension in ["xls", "xlsx"] else "csv"
+        try:
+            if extension == "csv":
+                
+                # 读取CSV文件
+                with open(abs_path, 'r', encoding='utf-8', errors='replace') as f:
+                    csv_reader = csv.reader(f)
+                    rows = list(csv_reader)
+                    if rows:
+                        headers = rows[0]
+                        data = rows[1:100]  # 限制行数
+                        structured_data = {
+                            "columns": headers,
+                            "data": data
+                        }
+                        preview_content = "[CSV表格数据]"
+                    else:
+                        preview_content = "[空CSV文件]"
+            elif extension in ["xls", "xlsx"]:
+                try:
+                    logger.info(f"尝试读取{abs_path}")
+                    # 读取Excel文件
+                    df = pd.read_excel(abs_path, nrows=100)  # 限制行数
+                    structured_data = {
+                        "columns": df.columns.tolist(),
+                        "data": df.values.tolist()
+                    }
+                    preview_content = "[Excel表格数据]"
+                except ImportError as e:
+                    preview_content = f"[Pandas读取Excel文件出现错误:{e}]"
+                    raise e
+        except Exception as e:
+            preview_content = f"[表格文件读取失败: {str(e)}]"
     else:
-        # 二进制文件，不提供预览内容
+        # 其他二进制文件，不提供预览内容
         preview_content = "[二进制文件，无法预览]"
     
     # 构建预览响应
@@ -210,7 +267,10 @@ def get_file_preview(path: str, max_size: int = 100000) -> FilePreview:
         content=preview_content,
         is_binary=not is_text,
         is_truncated=truncated,
-        encoding="utf-8" if is_text else None
+        encoding="utf-8" if is_text else None,
+        preview_type=preview_type,
+        base64_data=base64_data,
+        structured_data=structured_data
     )
 
 def get_file_content(path: str) -> str:
@@ -256,42 +316,12 @@ if __name__ == "__main__":
     def test_filesystem_service():
         try:
             # 1. 测试设置工作目录
-            test_dir = "D:\\fakedata"  # 请确保此目录存在
-            print("\n1. 测试设置工作目录:")
-            workspace = set_workspace(test_dir)
-            print(f"工作目录设置为: {workspace}")
-            
-            # 2. 测试获取文件列表
-            print("\n2. 测试获取文件列表:")
-            files = get_files()
-            print("文件列表:")
-            for item in files:
-                type_str = "目录" if isinstance(item.root, DirectoryItem) else "文件"
-                print(f"- [{type_str}] {item.root.name}")
-            
-            # 3. 测试文件预览
-            print("\n3. 测试文件预览:")
-            # 假设工作目录中有一个文本文件
-            test_file = "main.py"  # 请确保此文件存在
-            try:
-                preview = get_file_preview(test_file)
-                print(f"文件名: {preview.name}")
-                print(f"类型: {preview.type}")
-                print(f"大小: {preview.formatted_size}")
-                print("预览内容:")
-                print(preview.preview[:100] + "..." if len(preview.preview) > 100 else preview.preview)
-            except Exception as e:
-                print(f"预览文件失败: {str(e)}")
-            
-            # 4. 测试文件内容读取
-            print("\n4. 测试文件内容读取:")
-            try:
-                content = get_file_content(test_file)
-                print(f"文件内容 (前100个字符):")
-                print(content[:100] + "..." if len(content) > 100 else content)
-            except Exception as e:
-                print(f"读取文件失败: {str(e)}")
+            test_dir = "D:\\deep\\examples\\exam"  # 请确保此目录存在
+            print(filesystem_manager.set_workspace(test_dir))
+            print(get_file_preview("你好.xlsx"))
         except Exception as e:
-            print(f"测试失败: {str(e)}")
+            print(e)
+
+
 # 运行测试
     test_filesystem_service()
