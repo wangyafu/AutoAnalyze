@@ -54,6 +54,9 @@ where python #应该包括一个在本项目的安装地址下的路径
 
 python -m ipykernel install --user #将本项目所用的python解释器注册为IPython内核
 ```
+### 开始体验
+完成以上工作后，打开浏览器，访问http://localhost:5173，开始体验用AI帮助你进行数据分析的魅力！
+
 ## 配置大模型
 你可以通过修改backend/config.json文件来配置大模型。也可以在前端的设置页面中配置。
 
