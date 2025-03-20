@@ -1,6 +1,6 @@
 ## 简介
 
-[English Version available here](https://github.com/wangyafu/AutoAnalyze/README_EN.md)
+[English Version available here](https://github.com/wangyafu/AutoAnalyze/blob/master/README_EN.md)
 
 AutoAnalyze是一个让AI为你进行数据分析和处理的工具。你需要输入数据所在文件夹的路径，然后向AI用自然语言描述你的需求，然后AI就会根据你的需求读取文件、编写python代码并执行。你可以看到AI对工具的调用情况.
 
