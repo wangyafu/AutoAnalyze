@@ -193,7 +193,7 @@ if __name__ == "__main__":
     #获取项目根目录
     root_path=os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(current_file_path))))
     root_path=os.path.dirname(root_path)
-    filesystem_manager.set_workspace(root_path+"\\examples\\exam")
+    filesystem_manager.set_workspace("D:\\fakedata\\sale")
     async def test_agent():
         # 创建一个测试用的ModelClient实例
         settings=get_settings()
@@ -203,7 +203,7 @@ if __name__ == "__main__":
         agent = create_agent(model_client, "test_conversation_id")
         
         # 测试消息
-        test_message = "谁是全班成绩最好的人"
+        test_message = "帮我分析过去12个月的销售趋势，找出增长最快的产品类别，并预测下个季度的销售情况"
         
         # 运行Agent并获取响应
         print("发送测试消息:", test_message)

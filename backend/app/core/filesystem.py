@@ -135,15 +135,17 @@ class FileSystemManager:
             "items": items
         }
 
-    def get_file_preview(self, path: str, max_size: int = 1024 * 1024) -> Dict[str, Any]:
-        """获取文件预览
+    
+
+    def get_file_info(self, path: str, preview_chars: int = 5000) -> Dict[str, Any]:
+        """获取文件内容和基本信息
 
         Args:
             path: 相对于工作目录的文件路径
-            max_size: 最大预览大小（字节）
+            preview_chars: 预览的字符数量
 
         Returns:
-            Dict: 文件预览
+            Dict: 文件内容和信息
         """
         if not self.workspace:
             return {
@@ -175,66 +177,39 @@ class FileSystemManager:
                 "error": "路径不是文件"
             }
 
-        # 获取文件大小
-        file_size = os.path.getsize(target_path)
-
-        # 判断文件类型
-        file_ext = os.path.splitext(target_path)[1].lower()
-        is_text = file_ext in [".txt", ".py", ".js", ".html", ".css", ".json", ".md", ".csv", ".xml", ".yml", ".yaml",
-                               ".ini", ".cfg", ".conf"]
-
-        # 如果文件太大或不是文本文件，返回基本信息
-        if file_size > max_size or not is_text:
-            return {
-                "status": "success",
-                "path": path,
-                "size": file_size,
-                "is_text": is_text,
-                "content": None,
-                "truncated": True
-            }
-
-        # 读取文件内容
         try:
-            with open(target_path, "r", encoding="utf-8") as f:
-                content = f.read(max_size)
-                truncated = file_size > max_size
+            # 获取文件基本信息
+            stats = os.stat(target_path)
+            file_size = stats.st_size
+            modified = time.strftime("%Y-%m-%dT%H:%M:%S", time.localtime(stats.st_mtime))
 
-            return {
-                "status": "success",
-                "path": path,
-                "size": file_size,
-                "is_text": True,
-                "content": content,
-                "truncated": truncated
-            }
-        except UnicodeDecodeError:
-            # 如果UTF-8解码失败，尝试其他编码或返回二进制文件信息
-            return {
-                "status": "success",
-                "path": path,
-                "size": file_size,
-                "is_text": False,
-                "content": None,
-                "truncated": True
-            }
+            # 读取文件内容
+            try:
+                with open(target_path, "r", encoding="utf-8") as f:
+                    content = f.read(preview_chars)
+                    is_truncated = len(content) < file_size
+                    
+                return {
+                    "status": "success",
+                    "size": file_size,
+                    "modified": modified,
+                    "content": content,
+                    "truncated": is_truncated
+                }
+            except UnicodeDecodeError:
+                # 如果不是文本文件，返回基本信息
+                return {
+                    "status": "success",
+                    "size": file_size,
+                    "modified": modified,
+                    "content": None,
+                    "is_binary": True
+                }
         except Exception as e:
             return {
                 "status": "error",
                 "error": f"读取文件失败: {str(e)}"
             }
-
-    def get_file_content(self, path: str) -> Dict[str, Any]:
-        """获取文件内容
-
-        Args:
-            path: 相对于工作目录的文件路径
-
-        Returns:
-            Dict: 文件内容
-        """
-        # 不限制大小的文件预览
-        return self.get_file_preview(path, max_size=50 * 1024 * 1024)  # 50MB上限
     def process_file(self, filename: str) -> Dict[str, Any]:
         """根据文件类型处理文件并返回相应的内容和预览信息
         
@@ -245,12 +220,12 @@ class FileSystemManager:
             包含文件内容和预览信息的字典
         """
         try:
-            content = self.get_file_content(filename)
+            info = self.get_file_info(filename)
             file_type = os.path.splitext(filename)[1].lower()[1:]
             
             result = {
                 "status": "success",
-                "content": content
+                "info": info
             }
             target_path = os.path.normpath(os.path.join(self.workspace, filename))
             # 根据文件类型进行不同处理
@@ -258,16 +233,20 @@ class FileSystemManager:
                 preview = self._process_tabular_file(target_path, file_type)
                 if preview:
                     result["preview"] = preview
-            
+                    result["info"].pop("content")
+                    result["info"].pop("truncated")
             elif file_type in ['docx', 'doc']:
                 preview = self._process_word_document(target_path)
                 if preview:
                     result["preview"] = preview
-            
+                    result["info"].pop("content")
+                    result["info"].pop("truncated")
             elif file_type in ['pptx', 'ppt']:
                 preview = self._process_powerpoint(target_path)
                 if preview:
                     result["preview"] = preview
+                    result["info"].pop("content")
+                    result["info"].pop("truncated")
                     
             return result
             
@@ -288,18 +267,46 @@ class FileSystemManager:
             表格预览信息
         """
         try:
+            # 尝试不同的编码
+            encodings = ['utf-8', 'gbk', 'gb2312', 'iso-8859-1']
+            df = None
+            used_encoding = None
+            
             if file_type == 'csv':
-                df = pd.read_csv(absolute_path)
+                for encoding in encodings:
+                    try:
+                        df = pd.read_csv(absolute_path, nrows=20, encoding=encoding)
+                        # 计算总行数
+                        with open(absolute_path, 'r', encoding=encoding) as f:
+                            total_rows = sum(1 for _ in f)
+                        used_encoding = encoding
+                        break
+                    except (UnicodeDecodeError, pd.errors.ParserError):
+                        continue
+                
+                if df is None:
+                    raise Exception("无法使用支持的编码读取文件")
             else:
-                df = pd.read_excel(absolute_path)
+                # Excel文件不需要处理编码
+                df = pd.read_excel(absolute_path, nrows=20)
+                # 读取总行数
+                full_df = pd.read_excel(absolute_path)
+                total_rows = len(full_df)
+                used_encoding = 'binary'  # Excel是二进制格式
+            
+           
             
             return {
-                "shape": df.shape,
+                "shape": (total_rows, len(df.columns)),  # 显示实际总行数
                 "columns": df.columns.tolist(),
                 "dtypes": df.dtypes.astype(str).to_dict(),
-                "head": df.head().to_dict(orient='records')
+                "head": df.head().to_dict(orient='records'),
+                "total_rows": total_rows,      # 新增字段，显示实际总行数
+                "preview_rows": len(df),       # 新增字段，显示预览的行数
+                "encoding": used_encoding      # 新增字段，显示使用的编码
             }
-        except Exception:
+        except Exception as e:
+            logger.error(f"处理表格文件失败: {str(e)}")
             return None
     
     def _process_word_document(self, absolute_path: str) -> Optional[Dict[str, Any]]:
@@ -327,6 +334,7 @@ class FileSystemManager:
                 "structure": self._extract_document_structure(result.text_content)
             }
         except Exception:
+            logger.error(f"处理Word文档失败: {str(e)}")
             return None
     
     def _process_powerpoint(self, absolute_path: str) -> Optional[Dict[str, Any]]:
@@ -353,6 +361,7 @@ class FileSystemManager:
                 "structure": self._extract_presentation_structure(result.text_content)
             }
         except Exception:
+            logger.error(f"处理PPT文件失败: {str(e)}")
             return None
     
     def _extract_document_structure(self, text_content: str) -> List[str]:
@@ -390,4 +399,27 @@ class FileSystemManager:
         # 与文档结构提取类似，但针对PPT的特点进行调整
         return self._extract_document_structure(text_content)  # 简单实现可以复用
 filesystem_manager = FileSystemManager()
+
+if __name__ == "__main__":
+    # 设置测试工作目录
+    test_dir =""
+    result = filesystem_manager.set_workspace(test_dir)
+    print(f"设置工作目录: {result}")
+    
+    # 测试不同类型的文件
+    test_files = [
+        
+        "销售数据.csv",          # CSV文件
+        
+    ]
+    
+    for file in test_files:
+        print(f"\n处理文件: {file}")
+        try:
+            result = filesystem_manager.process_file(file)
+            print(result)
+
+        except Exception as e:
+            print(f"测试异常: {str(e)}")
+
 
