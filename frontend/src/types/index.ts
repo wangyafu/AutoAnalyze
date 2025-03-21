@@ -24,6 +24,14 @@ export interface FileItem {
       columns: string[]
       data: any[][]
     }
+    markdown_content?: string
+    document_metadata?: {
+      title: string
+      type: string
+      pages?: string | number
+      slides?: string | number
+      word_count?: number
+    }
   }
   
   export interface OutputItem {

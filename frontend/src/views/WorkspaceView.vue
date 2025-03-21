@@ -65,6 +65,15 @@
         <p v-else class="text-gray-500">无法预览表格数据</p>
       </div>
       
+      <!-- Word/PPT文档预览 -->
+      <div v-else-if="previewFile?.preview_type === 'markdown'" class="document-preview">
+        <div v-if="previewFile?.markdown_content" v-html="renderDocumentContent(previewFile)" class="markdown-body"></div>
+        <p v-else class="text-gray-500">无法预览文档内容</p>
+        <div v-if="previewFile?.is_truncated" class="text-gray-500 mt-4 text-center">
+          [文档内容过长，仅显示部分内容]
+        </div>
+      </div>
+      
       <!-- 其他文件类型 -->
       <div v-else class="text-center text-gray-500">
         <p>{{ previewFile?.content || '无法预览此类型文件' }}</p>
@@ -85,6 +94,8 @@ import { useConversationStore } from '../stores/conversation'
 import { websocketService } from '../services/websocket'
 import { apiService } from '../services/api'
 import type { FilePreview } from '../types'
+import { renderMarkdown, renderDocumentPreview } from '../utils/markdown'
+
 const router = useRouter()
 const workspaceStore = useWorkspaceStore()
 const conversationStore = useConversationStore()
@@ -166,4 +177,48 @@ const sendMessage = (content: string) => {
     content
   })
 }
+
+// 渲染文档内容
+function renderDocumentContent(file: FilePreview): string {
+  if (!file.markdown_content) return ''
+  
+  return renderDocumentPreview(file.markdown_content, file.document_metadata)
+}
 </script>
+
+<style>
+/* 添加文档预览样式 */
+.document-preview {
+  max-height: 70vh;
+  overflow-y: auto;
+  padding: 1rem;
+}
+
+.markdown-body {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif;
+  line-height: 1.6;
+}
+
+.document-meta {
+  margin-bottom: 2rem;
+}
+
+.document-meta h1 {
+  font-size: 1.8rem;
+  margin-bottom: 0.5rem;
+}
+
+.meta-item {
+  color: #666;
+  font-size: 0.9rem;
+}
+
+.document-meta hr {
+  margin: 1rem 0;
+  border: 0;
+  border-top: 1px solid #eee;
+}
+
+
+</style>
+

@@ -26,7 +26,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, defineProps, watch, computed } from 'vue'
+import { onMounted, defineProps, watch, computed } from 'vue'
 import FileItem from './FileItem.vue'
 import {useWorkspaceStore} from "@/stores/workspace"
 const emit = defineEmits(['filePreview'])
