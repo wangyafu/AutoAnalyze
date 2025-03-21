@@ -18,7 +18,17 @@ export const useConversationStore = defineStore('conversation', () => {
   // 创建新对话
   async function createConversation(title?: string) {
     try {
-      const response = await apiService.createConversation(title)
+      // 如果没有提供标题，使用当前时间作为标题
+      const defaultTitle = new Date().toLocaleString('zh-CN', { 
+        year: 'numeric',
+        month: '2-digit',
+        day: '2-digit',
+        hour: '2-digit',
+        minute: '2-digit',
+        second: '2-digit'
+      })
+      
+      const response = await apiService.createConversation(title || defaultTitle)
       currentConversationId.value = response.id
       messages.value = []
       return response

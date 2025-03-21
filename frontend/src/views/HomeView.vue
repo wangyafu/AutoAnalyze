@@ -134,17 +134,8 @@ const handleDirectoryInput = async () => {
     console.log(response)
     workspaceStore.setWorkspace(response.workspace)
     
-    // 创建新对话，使用当前时间作为标题
-    const now = new Date()
-    const title = now.toLocaleString('zh-CN', { 
-      year: 'numeric',
-      month: '2-digit',
-      day: '2-digit',
-      hour: '2-digit',
-      minute: '2-digit',
-      second: '2-digit'
-    })
-    await conversationStore.createConversation(title)
+    // 创建新对话，不需要手动设置标题
+    await conversationStore.createConversation()
     
     ElMessage.success('工作目录设置成功')
     router.push('/workspace')
