@@ -69,6 +69,7 @@ onMounted(async () => {
       form.model.type = status.config.model.type || 'openai'
       form.model.endpoint = status.config.model.endpoint || 'https://api.openai.com/v1'
       form.model.model = status.config.model.model || 'gpt-4'
+      form.model.api_key = status.config.model.api_key || ''
     }
   } catch (error) {
     console.error('Failed to get system status:', error)
