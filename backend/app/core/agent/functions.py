@@ -33,7 +33,7 @@ tools = [
         "type": "function",
         "function": {
             "name": "read_files",
-            "description": "读取指定文件的内容。支持文本文件直接读取，CSV/Excel文件会自动生成数据预览（包含行数、列名、数据类型等信息）。",
+            "description": "读取指定文件的内容。支持文本文件直接读取，CSV/Excel文件会自动生成数据预览，Word和PowerPoint文档会提取文本内容和结构信息。",
             "parameters": {
                 "type": "object",
                 "properties": {
@@ -42,7 +42,7 @@ tools = [
                         "items": {
                             "type": "string"
                         },
-                        "description": "要读取的文件路径列表，相对于工作目录（例如：[\"data/sales.csv\", \"data/customers.csv\"]）"
+                        "description": "要读取的文件路径列表，相对于工作目录（例如：[\"data/sales.csv\", \"data/report.docx\"]）"
                     }
                 },
                 "required": ["filenames"]
@@ -106,7 +106,7 @@ async def read_file(filename: str) -> Dict[str, Any]:
     读取文件内容
     Tool Metadata:
     - name: read_file
-    - description: 读取指定文件内容，支持文本文件和CSV/Excel预览
+    - description: 读取指定文件内容，支持文本文件、CSV/Excel预览以及Word和PowerPoint文档
     - parameters:
       - name: filename
         type: string
@@ -122,37 +122,8 @@ async def read_file(filename: str) -> Dict[str, Any]:
         包含文件内容的字典
     """
     try:
-        # 使用文件系统管理器获取文件内容
-        content = fs_manager.get_file_content(filename)
-        file_type = os.path.splitext(filename)[1].lower()[1:]
-        
-        # 对于CSV和Excel文件，尝试使用pandas读取并返回预览
-        if file_type in ['csv', 'xlsx', 'xls']:
-            try:
-                if file_type == 'csv':
-                    df = pd.read_csv(filename)
-                else:
-                    df = pd.read_excel(filename)
-                
-                # 返回数据框的基本信息和前几行数据
-                return {
-                    "status": "success",
-                    "content": content,
-                    "preview": {
-                        "shape": df.shape,
-                        "columns": df.columns.tolist(),
-                        "dtypes": df.dtypes.astype(str).to_dict(),
-                        "head": df.head().to_dict(orient='records')
-                    }
-                }
-            except Exception as e:
-                # 如果pandas读取失败，仍然返回原始内容
-                pass
-        
-        return {
-            "status": "success",
-            "content": content
-        }
+        # 使用文件系统管理器处理文件
+        return fs_manager.process_file(filename)
     except Exception as e:
         return {
             "status": "error",
