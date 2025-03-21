@@ -13,7 +13,10 @@
     <div class="flex-1 flex flex-col overflow-hidden">
       <div class="p-4 border-b border-gray-200 flex justify-between items-center">
         <h2 class="text-lg font-semibold">数据分析助手</h2>
-        <el-button size="small" @click="router.push('/')">返回首页</el-button>
+        <div class="flex gap-2">
+          <el-button size="small" type="danger" @click="clearHistory">清空会话</el-button>
+          <el-button size="small" @click="router.push('/')">返回首页</el-button>
+        </div>
       </div>
       
       <div class="flex-1 overflow-y-auto p-4" ref="chatContainer">
@@ -85,7 +88,7 @@
 <script setup lang="ts">
 import { ref, onMounted, nextTick, watch } from 'vue'
 import { useRouter } from 'vue-router'
-import { ElMessage } from 'element-plus'
+import { ElMessage,ElMessageBox } from 'element-plus'
 import FileExplorer from '../components/file/FileExplorer.vue'
 import ChatHistory from '../components/chat/ChatHistory.vue'
 import ChatInput from '../components/chat/ChatInput.vue'
@@ -183,6 +186,27 @@ function renderDocumentContent(file: FilePreview): string {
   if (!file.markdown_content) return ''
   
   return renderDocumentPreview(file.markdown_content, file.document_metadata)
+}
+
+// 清空会话历史
+async function clearHistory() {
+  try {
+    await ElMessageBox.confirm(
+      '确定要清空当前会话历史吗？此操作不可恢复。',
+      '警告',
+      {
+        confirmButtonText: '确定',
+        cancelButtonText: '取消',
+        type: 'warning',
+      }
+    )
+    await conversationStore.createConversation()
+    ElMessage.success('会话已清空')
+  } catch (error) {
+    if (error !== 'cancel') {
+      ElMessage.error('清空会话失败')
+    }
+  }
 }
 </script>
 
