@@ -9,7 +9,8 @@ AutoAnalyze是一个让AI为你进行数据分析和处理的工具。你需要�
 
 ### Demo
 
-[演示视频](https://www.bilibili.com/video/BV1idXyYZEFY)
+![Interface Display1](assets/demo1.png)
+![Interface Display2](assets/demo2.png)
 
 ## 功能亮点
 
