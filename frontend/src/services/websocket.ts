@@ -218,10 +218,27 @@ export const websocketService = {
         break
       case 'done':
         conversationStore.setLoading(false)
+        ElMessage.success("智能体回复完毕")
         break
+      case 'error':
+        // 处理服务器返回的错误消息
+        console.error('服务器错误:', message.data)
+        // 显示错误提示
+        ElMessage.error(
+          message.data.message || '服务器发生错误',)
+          
+        // 如果有详细错误信息，在控制台输出
+        if (message.data.details) {
+          console.error('错误详情:', message.data.details)
+        }
+        // 如果正在加载中，取消加载状态
+        conversationStore.setLoading(false)
+        break
+      
         
       default:
         console.log('未处理的WebSocket消息类型:', message.type)
     }
   }
 }
+  
