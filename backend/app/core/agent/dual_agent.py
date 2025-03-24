@@ -3,7 +3,7 @@ from pydantic import BaseModel
 
 from app.core.model_client import ModelClient
 from app.core.agent.functions import tools, read_files, read_file, exec_code
-from app.core.agent.prompts import get_system_prompt, format_function_descriptions
+from app.core.agent.prompts import get_system_prompt
 from app.core.agent.schema import FunctionCall, FunctionResult
 from app.utils.logger import get_logger
 import json
@@ -15,7 +15,7 @@ from app.websocket.manager import manager
 from string import Template
 from app.core.agent.agent import Agent
 import json
-class UserAgent:
+class UserAgent(Agent):
     """用户代理智能体，负责理解用户意图并制定行动计划"""
     
     def __init__(self, model_client: ModelClient, conversation_id: str):
@@ -62,7 +62,7 @@ read_files: 读取文件内容
         # for msg in tool_agent_messages:
         #     if msg.get("role") != "system":  # 不添加系统消息
         #         self.messages.append(msg)
-
+        #过滤工具调用信息，避免消息历史过长。
         tool_agent_messages = [message for message in tool_agent_messages if (message.get("role", "")  in ["user","assistant"])]
         # 添加用户消息
         self.messages.append({"role": "user", "content": self.promptTemplate.substitute(user_message=user_message,messages_history=json.dumps(tool_agent_messages,ensure_ascii=False))})
@@ -75,15 +75,11 @@ read_files: 读取文件内容
         )
         
         if response.get("status") == "error":
-            return f"生成行动计划时出错: {response.get('error', '未知错误')}"
+            error_message=f"生成行动计划时出错: {response.get('error', '未知错误')}"
+            await self.error(error_message)
+            return error_message
         
         action_plan = response.get("message", {}).get("content", "")
-        
-        # 添加助手回复到历史
-        self.messages.append({
-            "role": "assistant",
-            "content": action_plan
-        })
         
         # 广播助手消息
         await manager.broadcast_message({
@@ -217,13 +213,7 @@ class DualAgentSystem:
             final_response = f"已达到最大循环次数({max_iterations})，当前执行结果:\n{tool_response}"
         
         # 发送完成通知
-        await manager.broadcast_message({
-            "type": "done",
-            "data": {
-                "timestamp": datetime.datetime.now().isoformat(),
-                "conversation_id": self.conversation_id
-            }
-        })
+        await self.user_agent.done()
         
         return final_response
     

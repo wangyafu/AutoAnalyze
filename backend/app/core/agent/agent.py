@@ -3,7 +3,7 @@ from pydantic import BaseModel
 
 from app.core.model_client import ModelClient,OpenAIClient
 from app.core.agent.functions import tools, read_files, read_file, exec_code
-from app.core.agent.prompts import get_system_prompt, format_function_descriptions
+from app.core.agent.prompts import get_system_prompt
 from app.core.agent.schema import FunctionCall, FunctionResult
 from app.utils.logger import get_logger
 import json
@@ -28,7 +28,7 @@ class Agent:
         self.model_client = model_client
         self.conversation_id = conversation_id
         self.system_prompt = get_system_prompt()
-        self.function_descriptions = format_function_descriptions()
+     
         self.messages = []
         self.messages.append({
             'role':"system",
@@ -148,6 +148,17 @@ class Agent:
         """关闭代理使用的资源"""
         if self.model_client:
             await self.model_client.close()
+    async def error(self,error_message:str):
+        await manager.broadcast_message(
+            {
+                "type": "error",
+                "data":{
+                "timestamp": datetime.datetime.now().isoformat(),
+                "conversation_id":self.conversation_id,
+                "details":error_message
+                }
+            }
+        )
 
 
 def create_agent(model_client: ModelClient, conversation_id: str) -> Agent:
