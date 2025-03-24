@@ -26,7 +26,10 @@ class JupyterExecutionEngine:
         self.setup_code="""
 import matplotlib.pyplot as plt
 plt.rcParams['font.sans-serif'] = ['SimHei']  # 设置默认字体为 SimHei（黑体）
-plt.rcParams['axes.unicode_minus'] = False  # 解决负号显示问题"""   
+plt.rcParams['axes.unicode_minus'] = False  # 解决负号显示问题
+import warnings
+# 忽略所有警告
+warnings.filterwarnings("ignore")"""   
 
     async def create_kernel(self, conversation_id: str) -> None:
         """创建全局Jupyter内核"""
@@ -42,11 +45,6 @@ plt.rcParams['axes.unicode_minus'] = False  # 解决负号显示问题"""
 
             # 新增：验证内核准备就绪
             await client.wait_for_ready(timeout=10)
-
-#             setup_code = """
-# import matplotlib.pyplot as plt
-# plt.switch_backend('agg')  # 非交互式模式下使用agg后端
-# """
   
             client.execute(self.setup_code)#避免出现字体错误
 
