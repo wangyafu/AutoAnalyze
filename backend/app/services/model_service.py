@@ -1,4 +1,4 @@
-from typing import Dict, Any, Optional
+from typing import Dict, Any, Optional, Union, List
 import asyncio
 from app.core.model_client import create_client, ModelClient
 from app.config import get_settings
@@ -6,9 +6,13 @@ from app.config import get_settings
 from app.core.agent.agent import create_agent, run_agent
 from app.schemas.config import ModelConfig
 from app.core.agent.agent import Agent
+from app.core.agent.dual_agent import DualAgentSystem
+from app.core.agent.agent_factory import create_agent_system, run_agent_system,create_dual_agent_from_single,create_singal_agent_from_dual
 # 全局变量，存储模型客户端实例
+from app.utils.logger import get_logger
+logger=get_logger(__name__)
 _model_client = None
-Agents:list[Agent]=[]
+Agents: List[Union[Agent, DualAgentSystem]] = []
 async def initialize_model(config: ModelConfig = None) -> (bool,ModelClient):
     """
     初始化模型
@@ -73,26 +77,44 @@ async def get_model_status() -> Dict[str, Any]:
             "error": str(e)
         }
 
-async def send_message(conversation_id: str, content: str) -> Dict[str, Any]:
+async def send_message(conversation_id: str, content: str, use_dual_agent: bool = False) -> Dict[str, Any]:
     try:
         client = get_model_client()
-        
+        logger.info(f"接收到用户消息:{content}")
         # 查找或创建Agent
         existing_agents = list(filter(lambda a: a.conversation_id == conversation_id, Agents))
         if not existing_agents:
-            agent = create_agent(client, conversation_id)
+            # 根据use_dual_agent参数创建相应的智能体系统
+            settings = get_settings()
+            agent = create_agent_system(settings.model, conversation_id, use_dual_agent, settings.userModel)
             Agents.append(agent)
         else:
             agent = existing_agents[0]
+            # 检查是否需要切换智能体模式
+            current_is_dual = isinstance(agent, DualAgentSystem)
+            if current_is_dual != use_dual_agent:
+                # 使用转换函数而不是重新创建智能体
+                if use_dual_agent:
+                    # 从单智能体转换为双智能体
+                    new_agent = create_dual_agent_from_single(agent)
+                else:
+                    # 从双智能体转换为单智能体
+                    new_agent = await create_singal_agent_from_dual(agent)
+                
+                # 从列表中移除旧的智能体并添加新的智能体
+                Agents.remove(agent)
+                Agents.append(new_agent)
+                agent = new_agent
         
-        # 运行Agent处理用户消息
-        response = await run_agent(agent, content)
+        # 运行智能体系统处理用户消息
+        response = await run_agent_system(agent, content)
         
         # 返回简化后的响应（暂时隐藏数据库操作）
         return {
             "conversation_id": conversation_id,
             "content": response,
-            "agent_status": "existing" if existing_agents else "new"
+            "agent_status": "existing" if existing_agents else "new",
+            "agent_mode": "dual" if use_dual_agent else "single"
         }
     except Exception as e:
         print(f"发送消息失败: {str(e)}")

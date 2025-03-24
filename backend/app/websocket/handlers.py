@@ -54,15 +54,17 @@ async def handle_message(message: str, websocket: WebSocket, manager: Connection
 
 async def handle_user_message(data: Dict[str, Any], websocket: WebSocket, manager: ConnectionManager):
     """处理用户消息"""
+    print(data)
     conversation_id = data.get("conversation_id")
     content = data.get("content")
-    
-    if not conversation_id or not content:
+    use_dual_agent=data.get("use_dual_agent")
+    print(conversation_id,content,use_dual_agent)
+    if (not conversation_id) or (not content) or  (use_dual_agent==None):
         await manager.send_personal_message({
             "type": "error",
             "data": {
                 "code": "invalid_request",
-                "message": "缺少必要参数: conversation_id 或 content"
+                "message": "缺少必要参数"
             }
         }, websocket)
         return
@@ -72,7 +74,7 @@ async def handle_user_message(data: Dict[str, Any], websocket: WebSocket, manage
         # user_message = await add_message(conversation_id, "user", content)
         
         # 发送消息到模型并获取回复
-        response = await send_message(conversation_id, content)
+        response = await send_message(conversation_id, content,use_dual_agent)
 
         
     except Exception as e:

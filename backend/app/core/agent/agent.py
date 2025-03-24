@@ -106,19 +106,8 @@ class Agent:
                 continue
             await self.appendAiMessage(response["message"]["content"])
             # 如果没有函数调用，则是最终回复
-            self.messages.append({
-                "role": "assistant",
-                "content": response["message"]["content"]
-            })
-            await manager.broadcast_message(
-                {
-                    "type": "done",
-                    "data":{
-                    "timestamp": datetime.datetime.now().isoformat(),
-                    "conversation_id":self.conversation_id
-                    }
-                }
-            )
+            await self.done()
+            
             return response["message"]["content"]
     async def appendAiMessage(self,message:str,tool_calls:List[Dict[str,Any]]=None):
         self.messages.append({
@@ -142,7 +131,18 @@ class Agent:
             )
         
         
-   
+    async def done(self):
+        
+                await manager.broadcast_message(
+                    {
+                        "type": "done",
+                        "data":{
+                        "timestamp": datetime.datetime.now().isoformat(),
+                        "conversation_id":self.conversation_id
+                        }
+                    }
+                )
+
     
     async def close(self):
         """关闭代理使用的资源"""
