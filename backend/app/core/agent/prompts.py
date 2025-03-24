@@ -16,7 +16,7 @@ def get_system_prompt() -> str:
 
 2.使用read_files函数读取特定文件的内容。这可以帮助你进一步了解数据的细节。
 
-3.使用exec_code函数执行Python代码。
+3.使用exec_code函数执行Python代码。所有的代码共享用一个全局环境，你不需要重复导入库、定义函数等。
 
 对于用户发来的请求，你需要通过read_directory和read_files了解数据，然后通过exec_code函数执行数据分析、数据处理和数据可视化等操作。
 
@@ -46,54 +46,3 @@ def get_system_prompt() -> str:
 
 """
 
-
-def format_function_descriptions() -> List[Dict[str, Any]]:
-    """格式化函数描述，用于模型的函数调用
-    
-    Returns:
-        函数描述列表
-    """
-    return [
-        {
-            "name": "read_files",
-            "description": "读取工作目录下文件的基本信息",
-            "parameters": {
-                "type": "object",
-                "properties": {
-                    "path": {
-                        "type": "string",
-                        "description": "可选的子目录路径，如果不提供则使用当前工作目录"
-                    }
-                },
-                "required": []
-            }
-        },
-        {
-            "name": "read_file",
-            "description": "读取特定文件的内容",
-            "parameters": {
-                "type": "object",
-                "properties": {
-                    "filename": {
-                        "type": "string",
-                        "description": "要读取的文件路径"
-                    }
-                },
-                "required": ["filename"]
-            }
-        },
-        {
-            "name": "exec_code",
-            "description": "执行Python代码",
-            "parameters": {
-                "type": "object",
-                "properties": {
-                    "code": {
-                        "type": "string",
-                        "description": "要执行的Python代码"
-                    }
-                },
-                "required": ["code"]
-            }
-        }
-    ]
