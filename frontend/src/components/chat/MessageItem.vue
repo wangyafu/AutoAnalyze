@@ -15,11 +15,16 @@
     </div>
     
     <!-- 助手消息 -->
-    <div v-else-if="message.type === 'assistant'" class="assistant-message">
+    <div v-else-if="(message.type === 'assistant') || (message.type==='user_assistant')" class="assistant-message">
       <div class="flex items-start">
-        <div class="assistant-avatar">
+        <div class="assistant-avatar" v-if="message.type==='assistant'">
           <div class="w-8 h-8 rounded-full bg-green-500 flex items-center justify-center text-white">
             <span>A</span>
+          </div>
+        </div>
+        <div class="assistant-avatar" v-else>
+          <div class="w-8 h-8 rounded-full bg-green-500 flex items-center justify-center text-white">
+            <span>P</span>
           </div>
         </div>
         <div class="message-content ml-3 p-3 bg-white border border-gray-200 rounded-lg">
@@ -130,7 +135,7 @@
           <div v-else class="tool-other-result">
             <div v-for="r in message.metadata.result" :key="r" class="text-sm">
               <div v-if="r.status === 'success'" class="p-2 rounded-md text-green-600">
-                {{ `文件${r.content.path}读取成功` }}
+                {{ `文件${r.info.path}读取成功` }}
               </div>
               <div v-else class="p-2 rounded-md text-red-500">
                 {{ `文件读取失败: ${r.message}` }}
