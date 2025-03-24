@@ -231,22 +231,25 @@ class FileSystemManager:
             # 根据文件类型进行不同处理
             if file_type in ['csv', 'xlsx', 'xls']:
                 preview = self._process_tabular_file(target_path, file_type)
-                if preview:
+                result["info"].pop("content")
+                result["info"].pop("truncated")
+                if preview["ok"]:
                     result["preview"] = preview
-                    result["info"].pop("content")
-                    result["info"].pop("truncated")
+                    
             elif file_type in ['docx', 'doc']:
                 preview = self._process_word_document(target_path)
-                if preview:
+                result["info"].pop("content")
+                result["info"].pop("truncated")
+                if preview["ok"]:
                     result["preview"] = preview
-                    result["info"].pop("content")
-                    result["info"].pop("truncated")
+                    
             elif file_type in ['pptx', 'ppt']:
                 preview = self._process_powerpoint(target_path)
-                if preview:
+                result["info"].pop("content")
+                result["info"].pop("truncated")
+                if preview["ok"]:
                     result["preview"] = preview
-                    result["info"].pop("content")
-                    result["info"].pop("truncated")
+                    
                     
             return result
             
@@ -303,11 +306,15 @@ class FileSystemManager:
                 "head": df.head().to_dict(orient='records'),
                 "tail": df.tail().to_dict(orient='records'),
                 "total_rows": total_rows,      # 新增字段，显示实际总行数
-                "encoding": used_encoding      # 新增字段，显示使用的编码
+                "encoding": used_encoding, # 新增字段，显示使用的编码
+                "ok":True
             }
         except Exception as e:
             logger.error(f"处理表格文件失败: {str(e)}")
-            return None
+            return {
+                "ok":False,
+                "error": str(e)
+            }
     
     def _process_word_document(self, absolute_path: str) -> Optional[Dict[str, Any]]:
         """处理Word文档
@@ -335,7 +342,10 @@ class FileSystemManager:
             }
         except Exception:
             logger.error(f"处理Word文档失败: {str(e)}")
-            return None
+            return {
+                "ok":False,
+                "error": str(e)
+            }
     
     def _process_powerpoint(self, absolute_path: str) -> Optional[Dict[str, Any]]:
         """处理PowerPoint演示文稿
@@ -362,7 +372,10 @@ class FileSystemManager:
             }
         except Exception:
             logger.error(f"处理PPT文件失败: {str(e)}")
-            return None
+            return {
+                "ok":False,
+                "error": str(e)
+            }
     
     def _extract_document_structure(self, text_content: str) -> List[str]:
         """从文档内容中提取结构（标题等）
