@@ -33,7 +33,7 @@ tools = [
         "type": "function",
         "function": {
             "name": "read_files",
-            "description": "读取指定文件的内容。支持文本文件直接读取，CSV/Excel文件会自动生成数据预览，Word和PowerPoint文档会提取文本内容和结构信息。",
+            "description": "读取指定文件的内容。支持文本文件直接读取，CSV/Excel文件会自动生成数据预览，Word和PowerPoint文档会提取文本内容和结构信息。当文件内容过大时，读取到的内容将是截断之后的部分。",
             "parameters": {
                 "type": "object",
                 "properties": {
