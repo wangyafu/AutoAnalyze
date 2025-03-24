@@ -9,8 +9,8 @@ AutoAnalyze是一个让AI为你进行数据分析和处理的工具。你需要�
 
 ### Demo
 
-![Interface Display1](assets/demo1.png)
-![Interface Display2](assets/demo2.png)
+![](assets/demo1.png)
+![](assets/demo2.png)
 
 ## 功能亮点
 
@@ -67,7 +67,7 @@ python -m ipykernel install --user #将本项目所用的python解释器注册�
 
 ### 开始体验
 
-完成以上工作后，打开浏览器，访问http://localhost:5173，开始体验用AI帮助你进行数据分析的魅力！
+完成以上工作后，打开浏览器，访问http://localhost:5173 ，开始体验用AI帮助你进行数据分析的魅力！
 
 ## 配置大模型
 
