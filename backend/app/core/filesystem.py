@@ -301,8 +301,8 @@ class FileSystemManager:
                 "columns": df.columns.tolist(),
                 "dtypes": df.dtypes.astype(str).to_dict(),
                 "head": df.head().to_dict(orient='records'),
+                "tail": df.tail().to_dict(orient='records'),
                 "total_rows": total_rows,      # 新增字段，显示实际总行数
-                "preview_rows": len(df),       # 新增字段，显示预览的行数
                 "encoding": used_encoding      # 新增字段，显示使用的编码
             }
         except Exception as e:
