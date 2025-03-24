@@ -76,9 +76,12 @@ class OpenAIClient(ModelClient):
         request_data = {
             "model": self.model,
             "messages": messages,
-            "tools": tools,
             "temperature": 0.7
         }
+        
+        # 仅当tools不为空时添加tools参数
+        if tools and len(tools) > 0:
+            request_data["tools"] = tools
         
         # 发送请求到OpenAI API
         try:
