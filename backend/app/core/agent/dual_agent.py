@@ -66,7 +66,7 @@ read_files: 读取文件内容
         tool_agent_messages = [message for message in tool_agent_messages if (message.get("role", "")  in ["user","assistant"])]
         # 添加用户消息
         self.messages.append({"role": "user", "content": self.promptTemplate.substitute(user_message=user_message,messages_history=json.dumps(tool_agent_messages,ensure_ascii=False))})
-        print(len(self.messages))
+        
 
         # 调用模型生成行动计划或判断任务完成状态
         response = await self.model_client.chat_completion(

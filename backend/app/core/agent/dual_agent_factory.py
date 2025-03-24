@@ -40,33 +40,3 @@ async def run_dual_agent(system: DualAgentSystem, user_message: str) -> str:
     """
     return await run_dual_agent_system(system, user_message)
 
-if __name__ == "__main__":
-    import asyncio
-    import sys
-    import os
-    import uuid
-    from app.schemas.config import ModelConfig
-    from app.config import get_settings
-    from app.core.filesystem import filesystem_manager
-    
-    async def main():
-        # 设置工作目录
-        test_workspace="D:\\fakedata\\sale"
-        result = filesystem_manager.set_workspace(test_workspace)
-        print(f"设置工作目录结果: {result}")
-       
-        tool_model_config = get_settings().model
-        user_model_config=get_settings().userModel
-        # 创建双智能体系统
-        conversation_id = "test-conversation-" + str(uuid.uuid4())
-        system = create_dual_agent(user_model_config, tool_model_config, conversation_id)
-        
-        # 测试用户消息
-        user_message = "帮我分析过去12个月的销售趋势，找出增长最快的产品类别，并预测下个季度的销售情况"
-        
-        print(f"发送用户消息: {user_message}")
-        response = await run_dual_agent(system, user_message)
-        print(f"系统响应:\n{response}")
-    
-    # 运行主函数
-    asyncio.run(main())

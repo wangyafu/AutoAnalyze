@@ -54,11 +54,9 @@ async def handle_message(message: str, websocket: WebSocket, manager: Connection
 
 async def handle_user_message(data: Dict[str, Any], websocket: WebSocket, manager: ConnectionManager):
     """处理用户消息"""
-    print(data)
     conversation_id = data.get("conversation_id")
     content = data.get("content")
     use_dual_agent=data.get("use_dual_agent")
-    print(conversation_id,content,use_dual_agent)
     if (not conversation_id) or (not content) or  (use_dual_agent==None):
         await manager.send_personal_message({
             "type": "error",

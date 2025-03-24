@@ -316,7 +316,7 @@ if __name__ == "__main__":
     def test_filesystem_service():
         try:
             # 1. 测试设置工作目录
-            test_dir = "D:\\deep\\examples\\exam"  # 请确保此目录存在
+            test_dir = ""  # 请确保此目录存在
             print(filesystem_manager.set_workspace(test_dir))
             print(get_file_preview("你好.xlsx"))
         except Exception as e:

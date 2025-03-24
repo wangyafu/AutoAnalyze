@@ -65,8 +65,7 @@ class ConnectionManager:
         await self.broadcast(message)
     async def broadcast_message(self,message:dict):
         if "code" in message["type"]:
-            # logger.info(message)
-            # print(message)
+            
             pass
         await self.broadcast(message)
 
