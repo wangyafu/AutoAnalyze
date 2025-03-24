@@ -80,10 +80,13 @@ python -m ipykernel install --user #将本项目所用的python解释器注册�
 
 你可以通过修改backend/config.json文件来配置大模型。也可以在前端的设置页面中配置。
 
-目前本项目兼容OpenAI API的大模型，同时大模型必须支持Function Call功能。
+目前本项目兼容OpenAI API的大模型，同时工具调用大模型必须支持Function Call功能。
 
 我本人测试所使用的大模型是qwen-plus。
 
-## 额外说明
 
-本项目绝大部分代码由DeepSeek-R1和Claude完成，logo则由Gemini 2.0 Flash Experimental生成。感谢这些AI让我可以在几天内就完成这个项目的雏形。
+## 额外说明
+- 主页如果显示“后端服务:连接失败”，说明后端服务没有启动或启动失败。
+- 主页如果显示“后端服务:连接成功 模型状态异常”，说明后端服务启动成功，但模型无法正常使用。(后端会发送一个到你指定的endPoint下/models端点的请求，请求失败则认为模型无法使用)
+- 正常情况下，主页会显示“后端服务:连接成功 模型状态正常”。
+- 本项目绝大部分代码由DeepSeek-R1和Claude完成，logo则由Gemini 2.0 Flash Experimental生成。感谢这些AI让我可以在几天内就完成这个项目的雏形。
