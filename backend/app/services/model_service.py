@@ -2,8 +2,6 @@ from typing import Dict, Any, Optional, Union, List
 import asyncio
 from app.core.model_client import create_client, ModelClient
 from app.config import get_settings
-
-from app.core.agent.agent import create_agent, run_agent
 from app.schemas.config import ModelConfig
 from app.core.agent.agent import Agent
 from app.core.agent.dual_agent import DualAgentSystem
@@ -41,7 +39,7 @@ async def initialize_model(config: ModelConfig = None) -> (bool,ModelClient):
         print(f"初始化模型失败: {str(e)}")
         return False,None
 
-def get_model_client() -> ModelClient:
+async def get_model_client() -> ModelClient:
     """
     获取模型客户端实例
     
@@ -55,7 +53,7 @@ def get_model_client() -> ModelClient:
     
     if _model_client is None:
         # 尝试初始化
-        if not initialize_model():
+        if not await initialize_model():
             raise Exception("模型未初始化或初始化失败")
     
     return _model_client
@@ -68,7 +66,7 @@ async def get_model_status() -> Dict[str, Any]:
         Dict[str, Any]: 模型状态信息
     """
     try:
-        client = get_model_client()
+        client = await get_model_client()
         status=await client.get_status()
         return status
     except Exception as e:
@@ -79,7 +77,7 @@ async def get_model_status() -> Dict[str, Any]:
 
 async def send_message(conversation_id: str, content: str, use_dual_agent: bool = False) -> Dict[str, Any]:
     try:
-        client = get_model_client()
+
         logger.info(f"接收到用户消息:{content}")
         # 查找或创建Agent
         existing_agents = list(filter(lambda a: a.conversation_id == conversation_id, Agents))
@@ -138,7 +136,7 @@ async def update_model_config(config: Dict[str, Any]) -> bool:
                 setattr(settings.model, key, value)
         
         # 重新初始化模型
-        return await initialize_model(settings.model.dict())
+        return await initialize_model(settings.model)
     except Exception as e:
         print(f"更新模型配置失败: {str(e)}")
         return False
@@ -147,46 +145,7 @@ async def update_model_config(config: Dict[str, Any]) -> bool:
 if __name__ == "__main__":
     async def test_model_service():
         print("开始测试模型服务...")
-        
-        # 初始化模型
-        print("正在初始化模型...")
-        init_success,_model_client = await initialize_model()
-        
-        if not init_success:
-            print("模型初始化失败，请检查配置和网络连接")
-            return
-        
-        print("模型初始化成功!")
-        
-        # 获取模型状态
-        print("获取模型状态...")
-        status = await _model_client.get_status()
-        print(f"模型状态: {status}")
-        
-        # 测试发送消息
-        try:
-            print("测试发送消息...")
-            test_conversation_id = "test_conversation"
-            test_message = "你好，这是一条测试消息。请简要回复。"
-            
-            print(f"发送消息: {test_message}")
-            response = await _model_client.chat_completion(messages=[{'role': 'user', 'content': test_message}])
-            
-            if response.get("status") == "success":
-                print("收到回复:")
-                print(f"内容: {response['message']['content']}")
-                print(f"Token使用: {response.get('usage', {})}")
-            else:
-                print(f"发送消息失败: {response.get('error', '未知错误')}")
-        except Exception as e:
-            print(f"测试发送消息时出错: {str(e)}")
-        
-        # 关闭客户端
-        if _model_client:
-            print("关闭模型客户端...")
-            await _model_client.close()
-        
-        print("测试完成")
+        await send_message("111","你好",True)
 
     # 运行测试
     asyncio.run(test_model_service())
