@@ -13,7 +13,14 @@
     <div class="flex-1 flex flex-col overflow-hidden">
       <div class="p-4 border-b border-gray-200 flex justify-between items-center">
         <h2 class="text-lg font-semibold">数据分析助手</h2>
-        <div class="flex gap-2">
+        <div class="flex gap-2 items-center">
+          <!-- 添加智能体模式切换开关 -->
+          <el-switch
+            v-model="useDualAgent"
+            active-text="双智能体模式"
+            inactive-text="单智能体模式"
+            @change="handleAgentModeChange"
+          />
           <el-button size="small" type="danger" @click="clearHistory">清空会话</el-button>
           <el-button size="small" @click="router.push('/')">返回首页</el-button>
         </div>
@@ -31,73 +38,27 @@
       </div>
     </div>
     
-    <!-- 文件预览对话框 -->
-    <el-dialog
+    <!-- 使用封装的文件预览组件 -->
+    <FilePreviewDialog
       v-model="showPreview"
-      :title="previewFile?.path"
-      width="60%"
-      destroy-on-close
-    >
-      <!-- 文本文件预览 -->
-      <pre v-if="previewFile?.preview_type === 'text'" class="whitespace-pre-wrap break-words">{{ previewFile?.content }}</pre>
-      
-      <!-- 图片预览 -->
-      <div v-else-if="previewFile?.preview_type === 'image'" class="text-center">
-        <img v-if="previewFile?.base64_data" :src="`data:image/${getImageType(previewFile.name)};base64,${previewFile.base64_data}`" class="max-w-full max-h-[70vh]" />
-        <p v-else class="text-gray-500">无法预览图片</p>
-      </div>
-      
-      <!-- Excel/CSV预览 -->
-      <div v-else-if="['excel', 'csv'].includes(previewFile?.preview_type || '')" class="overflow-x-auto">
-        <table v-if="previewFile?.structured_data" class="min-w-full border-collapse border border-gray-300">
-          <thead>
-            <tr>
-              <th v-for="(column, index) in previewFile.structured_data.columns" :key="index" class="border border-gray-300 px-4 py-2 bg-gray-100">
-                {{ column }}
-              </th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr v-for="(row, rowIndex) in previewFile.structured_data.data" :key="rowIndex">
-              <td v-for="(cell, cellIndex) in row" :key="cellIndex" class="border border-gray-300 px-4 py-2">
-                {{ cell }}
-              </td>
-            </tr>
-          </tbody>
-        </table>
-        <p v-else class="text-gray-500">无法预览表格数据</p>
-      </div>
-      
-      <!-- Word/PPT文档预览 -->
-      <div v-else-if="previewFile?.preview_type === 'markdown'" class="document-preview">
-        <div v-if="previewFile?.markdown_content" v-html="renderDocumentContent(previewFile)" class="markdown-body"></div>
-        <p v-else class="text-gray-500">无法预览文档内容</p>
-        <div v-if="previewFile?.is_truncated" class="text-gray-500 mt-4 text-center">
-          [文档内容过长，仅显示部分内容]
-        </div>
-      </div>
-      
-      <!-- 其他文件类型 -->
-      <div v-else class="text-center text-gray-500">
-        <p>{{ previewFile?.content || '无法预览此类型文件' }}</p>
-      </div>
-    </el-dialog>
+      :file="previewFile"
+    />
   </div>
 </template>
 
 <script setup lang="ts">
 import { ref, onMounted, nextTick, watch } from 'vue'
 import { useRouter } from 'vue-router'
-import { ElMessage,ElMessageBox } from 'element-plus'
+import { ElMessage, ElMessageBox } from 'element-plus'
 import FileExplorer from '../components/file/FileExplorer.vue'
 import ChatHistory from '../components/chat/ChatHistory.vue'
 import ChatInput from '../components/chat/ChatInput.vue'
+import FilePreviewDialog from '../components/file/FilePreviewDialog.vue'
 import { useWorkspaceStore } from '../stores/workspace'
 import { useConversationStore } from '../stores/conversation'
 import { websocketService } from '../services/websocket'
-import { apiService } from '../services/api'
+import { filePreviewService } from '../services/filePreview'
 import type { FilePreview } from '../types'
-import { renderMarkdown, renderDocumentPreview } from '../utils/markdown'
 
 const router = useRouter()
 const workspaceStore = useWorkspaceStore()
@@ -106,6 +67,8 @@ const chatContainer = ref<HTMLElement | null>(null)
 
 const showPreview = ref(false)
 const previewFile = ref<FilePreview | null>(null)
+// 添加智能体模式切换状态
+const useDualAgent = ref(false)
 
 // 如果没有设置工作目录，重定向到首页
 onMounted(() => {
@@ -119,43 +82,16 @@ onMounted(() => {
   websocketService.connect()
 })
 
-async function handleFilePreview(path: string) {
-  try {
-    const response = await apiService.getFilePreview(path)
-    
-      const data = response as FilePreview
-      console.log('File preview:', data)
-      if (data.is_binary && !data.preview_type) {
-        ElMessage.warning('二进制文件无法预览')
-        return
-      }
-      previewFile.value = data
-      showPreview.value = true
-    
-  } catch (error) {
-    ElMessage.error('文件预览失败')
-  }
+// 处理智能体模式切换
+function handleAgentModeChange(value: boolean) {
+  ElMessage.info(`已切换到${value ? '双' : '单'}智能体模式`)
 }
 
-// 根据文件名获取图片类型
-function getImageType(filename: string): string {
-  if (!filename) return 'png'
-  const extension = filename.split('.').pop()?.toLowerCase() || ''
-  
-  switch (extension) {
-    case 'jpg':
-    case 'jpeg':
-      return 'jpeg'
-    case 'png':
-      return 'png'
-    case 'gif':
-      return 'gif'
-    case 'svg':
-      return 'svg+xml'
-    case 'webp':
-      return 'webp'
-    default:
-      return 'png'
+async function handleFilePreview(path: string) {
+  const data = await filePreviewService.getFilePreview(path)
+  if (data) {
+    previewFile.value = data
+    showPreview.value = true
   }
 }
 
@@ -175,17 +111,13 @@ const sendMessage = (content: string) => {
   if (!content.trim()) return
   
   conversationStore.addUserMessage(content)
-  websocketService.sendUserMessage({
+  const toSend={
     conversation_id: conversationStore.currentConversationId,
-    content
-  })
-}
-
-// 渲染文档内容
-function renderDocumentContent(file: FilePreview): string {
-  if (!file.markdown_content) return ''
-  
-  return renderDocumentPreview(file.markdown_content, file.document_metadata)
+    content,
+    use_dual_agent: useDualAgent.value // 添加智能体模式信息
+  }
+  console.log(toSend)
+  websocketService.sendUserMessage(toSend)
 }
 
 // 清空会话历史
@@ -209,40 +141,4 @@ async function clearHistory() {
   }
 }
 </script>
-
-<style>
-/* 添加文档预览样式 */
-.document-preview {
-  max-height: 70vh;
-  overflow-y: auto;
-  padding: 1rem;
-}
-
-.markdown-body {
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif;
-  line-height: 1.6;
-}
-
-.document-meta {
-  margin-bottom: 2rem;
-}
-
-.document-meta h1 {
-  font-size: 1.8rem;
-  margin-bottom: 0.5rem;
-}
-
-.meta-item {
-  color: #666;
-  font-size: 0.9rem;
-}
-
-.document-meta hr {
-  margin: 1rem 0;
-  border: 0;
-  border-top: 1px solid #eee;
-}
-
-
-</style>
 
