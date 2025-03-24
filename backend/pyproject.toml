@@ -2,12 +2,13 @@
 name = "backend"
 version = "0.1.0"
 description = "Add your description here"
-requires-python = ">=3.8"
+requires-python = ">=3.10"
 dependencies = [
     "aiohttp>=3.10.11",
     "fastapi>=0.115.11",
     "ipykernel>=6.29.5",
     "jupyter-client>=8.6.3",
+    "markitdown>=0.1.0",
     "matplotlib>=3.7.5",
     "openpyxl>=3.1.5",
     "pandas>=2.0.3",
