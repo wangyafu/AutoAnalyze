@@ -1,21 +1,20 @@
 {
     "version": "1.0.0",
     "workspace": null,
-    "config_path": "",
+    "config_path": "D:\\deep\\backend\\config.json",
     "model": {
         "type": "openai",
-        "api_key": "sk-",
+        "api_key": "",
         "endpoint": "https://dashscope.aliyuncs.com/compatible-mode/v1",
         "model": "qwen-plus"
     },
-    "security": {
-        "max_execution_time": 300,
-        "max_memory": 1024
-    },
-    "database": {
-        "type": "sqlite",
-        "path": "./data/history.db"
-    },
+    "user_model":{
+        "type": "openai",
+        "api_key":"",
+        "endpoint":"https://api.deepseek.com/v1",
+        "model":"deepseek-chat"
+    }
+    ,
     "server": {
         "host": "127.0.0.1",
         "port": 8000,

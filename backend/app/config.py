@@ -21,27 +21,22 @@ class Settings(BaseModel):
     # 配置文件路径
     config_path: str = str(DEFAULT_CONFIG_PATH)
     
-    # 模型配置
+    # 单智能体模式下的智能体配和双智能体模式下的工具调用智能体所用的配置，必须有工具调用能力。
     model: ModelConfig = ModelConfig(
         type="openai",
         api_key="",
         endpoint="https://api.openai.com/v1",
         model="gpt-4"
+    ) 
+    #双智能体模式下的用户代理模型配置，不需要进行工具调用。
+    userModel:ModelConfig = ModelConfig(
+        type="openai",
+        api_key="",
+        endpoint="",
+        model="gpt-4"
+        
     )
-    
-    # 安全配置
-    security: SecurityConfig = SecurityConfig(
-        max_execution_time=300,
-        max_memory=1024
-    )
-    
-    # 数据库配置
-    database: DatabaseConfig = DatabaseConfig(
-        type="sqlite",
-        path="./data/history.db"
-    )
-    
-    # 服务器配置
+    # 服务器配置，暂时不支持修改
     server: ServerConfig = ServerConfig(
         host="127.0.0.1",
         port=8000,
@@ -71,16 +66,11 @@ def get_settings() -> Settings:
             # 修改这部分代码，正确处理嵌套配置
             if "model" in config_data and isinstance(config_data["model"], dict):
                 settings.model = ModelConfig(**config_data["model"])
-            if "security" in config_data and isinstance(config_data["security"], dict):
-                settings.security = SecurityConfig(**config_data["security"])
-            if "database" in config_data and isinstance(config_data["database"], dict):
-                settings.database = DatabaseConfig(**config_data["database"])
-            if "server" in config_data and isinstance(config_data["server"], dict):
-                settings.server = ServerConfig(**config_data["server"])
-            
+            if "user_model" in config_data and isinstance(config_data["user_model"], dict):
+                settings.userModel = ModelConfig(**config_data["user_model"])
             # 处理其他非嵌套配置，跳过空值
             for key, value in config_data.items():
-                if (key not in ["model", "security", "database", "server"] and 
+                if (key not in ["model", "user_model", "server"] and 
                     hasattr(settings, key) and 
                     value != ""):  # 添加空值检查
                     setattr(settings, key, value)
