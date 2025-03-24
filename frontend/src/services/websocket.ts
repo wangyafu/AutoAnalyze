@@ -87,7 +87,7 @@ export const websocketService = {
   /**
    * 发送用户消息
    */
-  sendUserMessage(data: { conversation_id: string; content: string }) {
+  sendUserMessage(data: { conversation_id: string; content: string;use_dual_agent: boolean;}) {
     if (!this.socket || this.socket.readyState !== WebSocket.OPEN) {
       console.error('WebSocket未连接，无法发送消息')
       ElMessage.error('WebSocket未连接，无法发送消息')
@@ -213,7 +213,9 @@ export const websocketService = {
           this.executionStatus.value[endExecutionId].status = message.data.status
         }
         break
-        
+      case 'user_agent_message':
+        conversationStore.addUserAssistantMessage(message.data.content)
+        break
       case 'done':
         conversationStore.setLoading(false)
         break
