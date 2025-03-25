@@ -67,7 +67,7 @@ def get_settings() -> Settings:
             if "model" in config_data and isinstance(config_data["model"], dict):
                 settings.model = ModelConfig(**config_data["model"])
             if "user_model" in config_data and isinstance(config_data["user_model"], dict):
-                settings.userModel = ModelConfig(**config_data["user_model"])
+                settings.user_model = ModelConfig(**config_data["user_model"])
             # 处理其他非嵌套配置，跳过空值
             for key, value in config_data.items():
                 if (key not in ["model", "user_model", "server"] and 

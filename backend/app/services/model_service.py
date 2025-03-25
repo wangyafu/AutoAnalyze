@@ -84,7 +84,7 @@ async def send_message(conversation_id: str, content: str, use_dual_agent: bool 
         if not existing_agents:
             # 根据use_dual_agent参数创建相应的智能体系统
             settings = get_settings()
-            agent = create_agent_system(settings.model, conversation_id, use_dual_agent, settings.userModel)
+            agent = create_agent_system(settings.model, conversation_id, use_dual_agent, settings.user_model)
             Agents.append(agent)
         else:
             agent = existing_agents[0]
