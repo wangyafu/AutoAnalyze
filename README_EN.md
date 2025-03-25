@@ -65,11 +65,19 @@ where python # Should include project-specific paths
 python -m ipykernel install --user
 ```
 
+## Dual Agent Mode
+
+This mode is still in testing. It introduces a user agent that is responsible for planning. The benefits are:
+
+1. You can use LLMs that don't support Function Call capabilities. The user agent doesn't directly call tools but guides the tool-calling agent to complete tasks.
+2. Complex tasks can be completed through collaboration between agents.
+However, the current dual agent mode implementation is rudimentary and may not improve task completion rates.
+
 ## LLM Configuration
 
-Modify backend/config.json or use the web interface to configure LLM settings. Currently supports OpenAI-compatible APIs with function call capability.
+Modify backend/config.yaml or use the web interface to configure LLM settings. Currently supports OpenAI-compatible APIs with function call capability.
 
-Tested models include qwen-plus.
+Tested models include qwen-plus, qwen-max, and deepseek-chat (deepseek-v3).
 
 ## Notes
 
