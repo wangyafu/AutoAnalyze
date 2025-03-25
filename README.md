@@ -12,6 +12,10 @@ AutoAnalyze是一个让AI为你进行数据分析和处理的工具。你需要�
 ![](assets/demo1.png)
 ![](assets/demo2.png)
 
+### 视频演示
+
+[B站演示视频](https://www.bilibili.com/video/BV1idXyYZEFY/)
+
 ## 功能亮点
 
 - 通过自然语言描述需求，AI会自动编写Python代码并执行
