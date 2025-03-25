@@ -32,7 +32,6 @@
       
       <div class="border-t border-gray-200 p-4">
         <ChatInput 
-          :loading="conversationStore.loading" 
           @send="sendMessage" 
         />
       </div>

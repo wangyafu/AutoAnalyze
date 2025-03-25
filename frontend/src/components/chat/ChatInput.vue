@@ -4,7 +4,7 @@
       v-model="message"
       type="textarea"
       :rows="3"
-      :disabled="loading"
+      :disabled="conversationStore.loading"
       placeholder="输入您的问题或指令..."
       resize="none"
       @keydown.enter.ctrl.prevent="sendMessage"
@@ -15,8 +15,8 @@
       </div>
       <el-button 
         type="primary" 
-        :disabled="!message.trim() || loading" 
-        :loading="loading"
+        :disabled="!message.trim() || conversationStore.loading" 
+        :loading="conversationStore.loading"
         @click="sendMessage"
       >
         发送
@@ -26,20 +26,17 @@
 </template>
 
 <script setup lang="ts">
-import { ref, defineProps, defineEmits } from 'vue'
+import { ref,defineEmits } from 'vue'
+import { useConversationStore } from '@/stores/conversation'
 
-const props = defineProps({
-  loading: {
-    type: Boolean,
-    default: false
-  }
-})
+
 
 const emit = defineEmits(['send'])
 const message = ref('')
+const conversationStore = useConversationStore()
 
 function sendMessage() {
-  if (!message.value.trim() || props.loading) return
+  if (!message.value.trim() || conversationStore.loading) return
   
   emit('send', message.value)
   message.value = ''
