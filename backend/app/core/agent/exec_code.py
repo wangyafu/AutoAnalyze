@@ -97,16 +97,16 @@ async def exec_code(code: str, conversation_id: str) -> Dict[str, Any]:
         # 注销回调函数
         execution_engine.unregister_output_callback(execution_id)
 
-        # 修改输出收集逻辑（增加排序和ANSI过滤）
+        # 修改输出收集逻辑
         return {
             "status": "success" if status["status"] == "completed" else "error",
             "stdout": "\n".join(
-                re.sub(r'\x1B\[[0-?]*[ -/]*[@-~]', '', o["content"])  # 新增ANSI转义码过滤
+                o["content"]
                 for o in sorted(status["output"], key=lambda x: x["timestamp"]) 
                 if o["type"] == "stdout"
             ),
             "stderr": "\n".join(
-                re.sub(r'\x1B\[[0-?]*[ -/]*[@-~]', '', o["content"])  # 新增ANSI转义码过滤
+                o["content"]
                 for o in sorted(status["output"], key=lambda x: x["timestamp"]) 
                 if o["type"] in ["stderr", "error"]
             ),

@@ -9,7 +9,7 @@ from queue import Empty  # 添加导入
 from jupyter_client.asynchronous import AsyncKernelClient
 from jupyter_client import AsyncKernelManager
 from app.utils.logger import get_logger
-
+import re
 logger = get_logger(__name__)
 
 class JupyterExecutionEngine:
@@ -228,9 +228,11 @@ warnings.filterwarnings("ignore")"""
     async def _add_output(self, execution_id: str, output: str, output_type: str = 'stdout'):
         """添加执行输出"""
         if execution_id in self.executions:
+            # 添加ANSI转义码过滤
+            filtered_output = re.sub(r'\x1B\[[0-?]*[ -/]*[@-~]', '', output)
             output_item = {
                 'type': output_type,
-                'content': output,
+                'content': filtered_output,
                 'timestamp': time.time()
             }
             self.executions[execution_id]['output'].append(output_item)
