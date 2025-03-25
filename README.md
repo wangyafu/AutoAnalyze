@@ -78,11 +78,11 @@ python -m ipykernel install --user #将本项目所用的python解释器注册�
 但当前双智能体模式实现较为简陋，可能无法提高任务的完成率。
 ## 配置大模型
 
-你可以通过修改backend/config.json文件来配置大模型。也可以在前端的设置页面中配置。
+你可以通过修改backend/config.yaml文件来配置大模型。也可以在前端的设置页面中配置。
 
 目前本项目兼容OpenAI API的大模型，同时工具调用大模型必须支持Function Call功能。
 
-我本人测试所使用的大模型是qwen-plus。
+我本人使用过的大模型是qwen-plus、qwen-max、deepseek-chat(deepseek-v3)。
 
 
 ## 额外说明
