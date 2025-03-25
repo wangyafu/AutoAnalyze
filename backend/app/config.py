@@ -29,7 +29,7 @@ class Settings(BaseModel):
         model="gpt-4"
     ) 
     #双智能体模式下的用户代理模型配置，不需要进行工具调用。
-    userModel:ModelConfig = ModelConfig(
+    user_model:ModelConfig = ModelConfig(
         type="openai",
         api_key="",
         endpoint="",
