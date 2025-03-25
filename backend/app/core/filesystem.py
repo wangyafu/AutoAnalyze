@@ -194,7 +194,8 @@ class FileSystemManager:
                     "size": file_size,
                     "modified": modified,
                     "content": content,
-                    "truncated": is_truncated
+                    "truncated": is_truncated,
+                    "path":path
                 }
             except UnicodeDecodeError:
                 # 如果不是文本文件，返回基本信息
@@ -203,7 +204,8 @@ class FileSystemManager:
                     "size": file_size,
                     "modified": modified,
                     "content": None,
-                    "is_binary": True
+                    "is_binary": True,
+                    "path":path
                 }
         except Exception as e:
             return {
@@ -233,22 +235,19 @@ class FileSystemManager:
                 preview = self._process_tabular_file(target_path, file_type)
                 result["info"].pop("content")
                 result["info"].pop("truncated")
-                if preview["ok"]:
-                    result["preview"] = preview
+                result["preview"] = preview
                     
             elif file_type in ['docx', 'doc']:
                 preview = self._process_word_document(target_path)
                 result["info"].pop("content")
                 result["info"].pop("truncated")
-                if preview["ok"]:
-                    result["preview"] = preview
+                result["preview"] = preview
                     
             elif file_type in ['pptx', 'ppt']:
                 preview = self._process_powerpoint(target_path)
                 result["info"].pop("content")
                 result["info"].pop("truncated")
-                if preview["ok"]:
-                    result["preview"] = preview
+                result["preview"] = preview
                     
                     
             return result
