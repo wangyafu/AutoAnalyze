@@ -105,7 +105,7 @@ async def exec_code(code: str, conversation_id: str) -> Dict[str, Any]:
                     {
                         "type": o["type"],
                         "content": o["content"],
-                        # "timestamp": o["timestamp"]
+                        "timestamp": o["timestamp"]
                     }
                     for o in status["output"]
                 ],
