@@ -97,18 +97,19 @@ async def exec_code(code: str, conversation_id: str) -> Dict[str, Any]:
         # 注销回调函数
         execution_engine.unregister_output_callback(execution_id)
 
-        # 修改输出收集逻辑
+        # 修改输出收集逻辑，改为列表形式
         return {
             "status": "success" if status["status"] == "completed" else "error",
-            "stdout": "\n".join(
-                o["content"]
-                for o in sorted(status["output"], key=lambda x: x["timestamp"]) 
-                if o["type"] == "stdout"
-            ),
-            "stderr": "\n".join(
-                o["content"]
-                for o in sorted(status["output"], key=lambda x: x["timestamp"]) 
-                if o["type"] in ["stderr", "error"]
+            "output": sorted(
+                [
+                    {
+                        "type": o["type"],
+                        "content": o["content"],
+                        # "timestamp": o["timestamp"]
+                    }
+                    for o in status["output"]
+                ],
+                key=lambda x: x["timestamp"]
             ),
             "image_count": len(status.get("images", []))
         }
