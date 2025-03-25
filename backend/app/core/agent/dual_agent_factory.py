@@ -3,7 +3,7 @@ from app.core.model_client import ModelClient, create_client
 from app.core.agent.dual_agent import create_dual_agent_system, run_dual_agent_system, DualAgentSystem
 from app.schemas.config import ModelConfig
 from app.utils.logger import get_logger
-
+from app.core.filesystem import filesystem_manager
 logger = get_logger(__name__)
 
 def create_dual_agent(user_model_config: ModelConfig, tool_model_config: ModelConfig, conversation_id: str) -> DualAgentSystem:

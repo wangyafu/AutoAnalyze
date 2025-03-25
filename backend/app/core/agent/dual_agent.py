@@ -3,7 +3,7 @@ from pydantic import BaseModel
 
 from app.core.model_client import ModelClient
 from app.core.agent.functions import tools, read_files, read_file, exec_code
-from app.core.agent.prompts import get_system_prompt
+from app.core.agent.prompts import get_system_prompt, get_user_agent_prompt
 from app.core.agent.schema import FunctionCall, FunctionResult
 from app.utils.logger import get_logger
 import json
@@ -15,6 +15,7 @@ from app.websocket.manager import manager
 from string import Template
 from app.core.agent.agent import Agent
 import json
+
 class UserAgent(Agent):
     """用户代理智能体，负责理解用户意图并制定行动计划"""
     
@@ -25,26 +26,18 @@ class UserAgent(Agent):
             model_client: 模型客户端
             conversation_id: 对话ID
         """
-        self.model_client = model_client
-        self.conversation_id = conversation_id
-        self.promptTemplate = Template("""
-你是一个用户代理智能体，你需要帮助我实现任务目标。
-我的任务目标是：【$user_message】
-消息历史:【$messages_history】
-系统中存在工具调用智能体，你不应该直接执行任务，而是细化、分解用户的任务，指定行动计划交给工具调用智能体。
-工具调用智能体拥有的工具:
-exec_code: 执行Python代码
-read_directory: 读取目录
-read_files: 读取文件内容
-如果根据消息历史你发现用户的[任务目标]已经完成，你应该明确说明'任务已完成'并总结结果。
-如果未完成，你应该提供下一步行动计划，明确任务目标和具体操作。行动计划应该使用第二人称。请不要指定任务的具体参数，保留工具调用智能体的灵活性。
-如果任务因为某种原因无法完成，你应该明确说明'任务无法完成'并总结原因。
-【关键】：不要过度延伸！不要过度追求完美！我的时间是宝贵的！
-
-""")
+        # 调用父类初始化，但不使用父类的系统提示词
+        super().__init__(model_client, conversation_id)
+        # 使用专用的用户代理系统提示词
+        self.system_prompt = get_user_agent_prompt()
+        # 重置消息历史，添加新的系统提示
         self.messages = []
-        
-    
+        self.messages.append({
+            'role': "system",
+            "content": self.system_prompt
+        })
+        self.last_tool_history = []  # 存储上一轮工具调用历史
+
     async def process_message(self, user_message: str, tool_agent_messages: List[Dict[str, Any]]) -> str:
         """处理用户消息并生成行动计划或判断任务是否完成
         
@@ -55,31 +48,63 @@ read_files: 读取文件内容
         Returns:
             行动计划或任务完成状态
         """
-        # 更新消息历史，包含工具调用智能体的历史和原始用户输入
-        self.messages = []  # 保留系统提示
+        # 更新上一轮工具调用历史
+        self.last_tool_history = tool_agent_messages
         
-        # # 添加工具调用智能体的历史消息
-        # for msg in tool_agent_messages:
-        #     if msg.get("role") != "system":  # 不添加系统消息
-        #         self.messages.append(msg)
-        #过滤工具调用信息，避免消息历史过长。
-        tool_agent_messages = [message for message in tool_agent_messages if (message.get("role", "")  in ["user","assistant"])]
-        # 添加用户消息
-        self.messages.append({"role": "user", "content": self.promptTemplate.substitute(user_message=user_message,messages_history=json.dumps(tool_agent_messages,ensure_ascii=False))})
+        # 构建提示模板
+        prompt = f"""
+你需要帮助我实现以下任务目标。
+上一轮工具调用结果：
+<tool_agent_history>
+{self._summarize_tool_history()}
+</tool_agent_history>
+工具调用智能体拥有的工具:
+<tool_list>
+exec_code: 执行Python代码
+read_directory: 读取目录
+read_files: 读取文件内容
+</tool_list>
+我的目标：
+<target>
+{user_message}
+</target>
+你的任务:
+<task>
+1. 整理上一轮工具调用过程中得到的信息
+2. 给出当前的任务进展情况
+3. 判断任务是否完成，如果完成，请输出"任务已完成"，如果任务无法完成，请输出"任务无法完成"并指出无法完成的原因
+4. 如果未完成且有可能完成，制定下一轮行动计划
+</task>
+关于行动计划：
+<action_plan_about>
+- 行动计划将交给工具调用智能体，因此你应当使用第二人称
+- 工具调用智能体没有过往轮次的记忆，他不了解任务目标和过往轮次的结果，因此你需要在行动计划中加入你认为必要的信息
+- 为了解决复杂的数据科学问题，你的行动计划应当包含详细的数据处理步骤、分析方法选择和可视化策略
+- 对于数据预处理，请考虑缺失值处理、异常值检测和特征工程等高级技术
+- 对于分析方法，请根据问题性质选择合适的统计分析、机器学习或时间序列分析技术
+- 对于可视化，请指导生成信息丰富且易于理解的图表
+</action_plan_about>
+请开始执行任务。
+"""
         
-
-        # 调用模型生成行动计划或判断任务完成状态
+        # 调用模型生成响应
         response = await self.model_client.chat_completion(
-            messages=self.messages,
-            tools=[]  # 用户代理不使用工具
+            messages=[{"role":"user","content":user_message}]+self.messages+[{"role": "user", "content": prompt}],
+            tools=[]
         )
         
         if response.get("status") == "error":
-            error_message=f"生成行动计划时出错: {response.get('error', '未知错误')}"
+            error_message = f"生成行动计划时出错: {response.get('error', '未知错误')}"
             await self.error(error_message)
             return error_message
         
         action_plan = response.get("message", {}).get("content", "")
+        
+        # 保存本轮输出到历史
+        self.messages.append(
+            {
+            "role": "assistant",
+            "content": action_plan,})
         
         # 广播助手消息
         await manager.broadcast_message({
@@ -92,33 +117,23 @@ read_files: 读取文件内容
         })
         
         return action_plan
-    
-    async def close(self):
-        """关闭代理使用的资源"""
-        if self.model_client:
-            await self.model_client.close()
 
+    def _summarize_tool_history(self) -> str:
+        """整理工具调用历史"""
+        if not self.last_tool_history:
+            return "暂无工具调用结果"
+        return "\n".join([
+            f"{msg['role']}: {msg['content']}"
+            for msg in self.last_tool_history
+            if msg.get("role") in ["assistant", "tool"]
+        ])
 
 class ToolAgent(Agent):
-    """工具调用智能体，负责执行具体的工具调用，继承自Agent类"""
+    """工具调用智能体，负责执行具体的工具调用"""
     
     def __init__(self, model_client: ModelClient, conversation_id: str):
-        """初始化工具调用智能体
-        
-        Args:
-            model_client: 模型客户端
-            conversation_id: 对话ID
-        """
-        # 调用父类初始化方法
         super().__init__(model_client, conversation_id)
-        
-
-        # 更新消息历史中的系统提示
-        self.messages = []
-        self.messages.append({
-            'role': "system",
-            "content": self.system_prompt
-        })
+        self.previous_messages = []  # 存储上一轮的消息历史
     
     async def process_message(self, action_plan: str) -> str:
         """处理用户代理的行动计划并执行工具调用
@@ -129,11 +144,34 @@ class ToolAgent(Agent):
         Returns:
             执行结果
         """
+        # 保存当前消息历史为上一轮历史
+        if len(self.messages) > 1:  # 确保有消息可以保存
+            self.previous_messages = self.messages.copy()
         
-        # 调用父类的process_message方法，但传入action_plan作为用户消息
-        # 由于我们已经添加了用户消息，所以这里不需要再次添加
-        # 直接使用父类的循环处理逻辑
+        # 清空当前消息历史，但保留系统提示
+        self.messages = [self.messages[0]]  # 保留系统提示
+        
+        # 如果有上一轮历史，需要保持完整的工具调用链
+        if len(self.previous_messages) >= 3:
+            # 查找所有助手消息及其对应的工具响应消息
+            for i, msg in enumerate(self.previous_messages):
+                if msg["role"] == "assistant" and msg.get("tool_calls"):
+                    # 添加助手消息
+                    self.messages.append(msg)
+                    
+                    # 查找并添加对应的工具响应消息
+                    tool_call_ids = [tool_call["id"] for tool_call in msg.get("tool_calls", [])]
+                    for j in range(i+1, len(self.previous_messages)):
+                        if (self.previous_messages[j]["role"] == "tool" and 
+                            self.previous_messages[j].get("tool_call_id") in tool_call_ids):
+                            self.messages.append(self.previous_messages[j])
+        
+        # 添加本轮行动计划
+        self.messages.append({"role": "user", "content": action_plan})
+        
+        # 调用父类处理逻辑
         return await super().process_message(action_plan)
+    
     async def done(self):
         return 
     
@@ -181,21 +219,11 @@ class DualAgentSystem:
         
         # 初始行动计划由用户代理生成
         action_plan = await self.user_agent.process_message(user_message, self.tool_agent.messages)
-        
+        # action_plan=user_message
         # ReAct循环：推理-行动-观察-推理
         while not task_completed and current_iteration < max_iterations:
             # 工具调用智能体执行行动计划（行动阶段）
             tool_response = await self.tool_agent.process_message(action_plan)
-            
-            # # 判断任务是否完成
-            # # 方法1：检查工具响应中是否包含任务完成的标志
-            # if "任务已完成" in tool_response or "已完成所有请求" in tool_response:
-            #     task_completed = True
-            #     final_response = tool_response
-            #     break
-            
-            # 方法2：让用户代理判断是否需要继续
-            # 将工具响应传回用户代理进行下一轮推理
             next_action_plan = await self.user_agent.process_message(self.original_user_message,self.tool_agent.messages)
             
             # 检查用户代理的响应是否表明任务已完成
