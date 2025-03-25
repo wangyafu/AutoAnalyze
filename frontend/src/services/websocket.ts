@@ -219,6 +219,7 @@ export const websocketService = {
       case 'done':
         conversationStore.setLoading(false)
         ElMessage.success("智能体回复完毕")
+        console.log("智能体回复完毕")
         break
       case 'error':
         // 处理服务器返回的错误消息
