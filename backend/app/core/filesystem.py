@@ -230,24 +230,28 @@ class FileSystemManager:
                 "info": info
             }
             target_path = os.path.normpath(os.path.join(self.workspace, filename))
+            shouldDel=False
             # 根据文件类型进行不同处理
             if file_type in ['csv', 'xlsx', 'xls']:
                 preview = self._process_tabular_file(target_path, file_type)
-                result["info"].pop("content")
-                result["info"].pop("truncated")
+                shouldDel=True
                 result["preview"] = preview
                     
             elif file_type in ['docx', 'doc']:
                 preview = self._process_word_document(target_path)
-                result["info"].pop("content")
-                result["info"].pop("truncated")
+
+                shouldDel=True
                 result["preview"] = preview
                     
             elif file_type in ['pptx', 'ppt']:
                 preview = self._process_powerpoint(target_path)
-                result["info"].pop("content")
-                result["info"].pop("truncated")
+                shouldDel=True
                 result["preview"] = preview
+            if shouldDel:
+                if "content" in result["info"]:
+                    del result["info"]["content"]
+                if "truncated" in result["info"]:
+                    del result["info"]["truncated"]
                     
                     
             return result
@@ -421,7 +425,7 @@ if __name__ == "__main__":
     # 测试不同类型的文件
     test_files = [
         
-        "销售数据.csv",          # CSV文件
+        "summerOly_programs.csv",          # CSV文件
         
     ]
     
