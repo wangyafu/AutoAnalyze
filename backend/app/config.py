@@ -6,9 +6,10 @@ from functools import lru_cache
 from pydantic import BaseModel
 from app.schemas.config import ModelConfig, SecurityConfig, DatabaseConfig, ServerConfig, SystemConfig
 from app.utils.logger import get_logger
+import yaml  # 新增导入
 logger = get_logger(__name__)
 # 默认配置文件路径
-DEFAULT_CONFIG_PATH = Path(os.path.dirname(os.path.abspath(__file__))).parent / "config.json"
+DEFAULT_CONFIG_PATH = Path(os.path.dirname(os.path.abspath(__file__))).parent / "config.yaml"
 
 class Settings(BaseModel):
     """应用配置类"""
@@ -102,7 +103,7 @@ def load_config_from_file(path: str) -> Dict[str, Any]:
         raise Exception(f"配置文件不存在: {path}")
     
     with open(path, "r", encoding="utf-8") as f:
-        return json.load(f)
+        return yaml.safe_load(f)  # 修改为yaml加载
 
 
 def save_config_to_file(config: Settings, path: str) -> None:
@@ -119,12 +120,12 @@ def save_config_to_file(config: Settings, path: str) -> None:
     logger.info(f"保存配置到文件: {path}")
     os.makedirs(os.path.dirname(path), exist_ok=True)
     
-    # 将配置转换为JSON可序列化的字典
+    # 将配置转换为字典
     config_dict = config.model_dump(mode='json')
     
     # 保存到文件
     with open(path, "w", encoding="utf-8") as f:
-        json.dump(config_dict, f, ensure_ascii=False, indent=4)
+        yaml.safe_dump(config_dict, f, allow_unicode=True, sort_keys=False)  # 修改为yaml保存
 
 
 def reset_settings() -> None:

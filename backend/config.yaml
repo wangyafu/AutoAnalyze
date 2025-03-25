@@ -1,0 +1,47 @@
+# 应用版本
+version: "1.0.0"
+
+# 当前工作目录，null表示未设置
+workspace: null
+
+# 配置文件路径
+config_path: "D:\\deep\\backend\\config.yaml"
+
+# 模型配置
+model:
+  # 模型类型，目前支持openai
+  type: "openai"
+  
+  # API密钥
+  api_key: ""
+  
+  # API端点地址
+  endpoint: "https://api.deepseek.com/v1"
+  
+  # 使用的模型名称
+  model: "deepseek-chat"
+
+# 用户模型配置（用于双智能体模式）
+user_model:
+  # 模型类型，目前支持openai
+  type: "openai"
+  
+  # API密钥
+  api_key: ""
+  
+  # API端点地址
+  endpoint: "https://api.deepseek.com/v1"
+  
+  # 使用的模型名称
+  model: "deepseek-chat"
+
+# 服务器配置，目前修改后不会起到作用。
+server:
+  # 服务器监听地址
+  host: "127.0.0.1"
+  
+  # 服务器端口
+  port: 8000
+  
+  # 前端开发服务器端口
+  frontend_port: 5173
