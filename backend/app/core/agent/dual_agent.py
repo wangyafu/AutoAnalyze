@@ -123,7 +123,7 @@ read_files: 读取文件内容
         if not self.last_tool_history:
             return "暂无工具调用结果"
         return "\n".join([
-            f"{msg['role']}: {msg['content']}"
+            f"[{'工具调用智能体' if msg.get('role')=='assistant' else'工具调用结果'}]: [{msg['content']}]"
             for msg in self.last_tool_history
             if msg.get("role") in ["assistant", "tool"]
         ])
