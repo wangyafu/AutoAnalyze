@@ -37,6 +37,15 @@ class Settings(BaseModel):
         model="gpt-4"
         
     )
+    
+    # 视觉模型配置，用于处理图像相关任务
+    vision_model:ModelConfig = ModelConfig(
+        type="openai",
+        api_key="",
+        endpoint="https://api.moonshot.cn/v1",
+        model="moonshot-v1-8k-vision-preview"
+    )
+    
     # 服务器配置，暂时不支持修改
     server: ServerConfig = ServerConfig(
         host="127.0.0.1",
@@ -69,9 +78,11 @@ def get_settings() -> Settings:
                 settings.model = ModelConfig(**config_data["model"])
             if "user_model" in config_data and isinstance(config_data["user_model"], dict):
                 settings.user_model = ModelConfig(**config_data["user_model"])
+            if "vision_model" in config_data and isinstance(config_data["vision_model"], dict):
+                settings.vision_model = ModelConfig(**config_data["vision_model"])
             # 处理其他非嵌套配置，跳过空值
             for key, value in config_data.items():
-                if (key not in ["model", "user_model", "server"] and 
+                if (key not in ["model", "user_model", "vision_model", "server"] and 
                     hasattr(settings, key) and 
                     value != ""):  # 添加空值检查
                     setattr(settings, key, value)
