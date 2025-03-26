@@ -5,12 +5,14 @@ from app.websocket.manager import manager
 import asyncio
 
 from app.core.filesystem import FileSystemManager
+from app.core.image_utils import analyze_image
 import logging
 import sys
 import io
 import time
 import traceback
 import re
+import base64
 logger = logging.getLogger(__name__)
 # 获取文件系统管理器实例
 fs_manager = FileSystemManager()
@@ -69,8 +71,24 @@ async def exec_code(code: str, conversation_id: str) -> Dict[str, Any]:
             await asyncio.sleep(0.1)
 
         # 检查是否有图片输出并发送到前端
+        image_descriptions = []
         if "images" in status and status["images"]:
             for i, img_data in enumerate(status["images"]):
+                # 分析图片内容
+                image_description = await analyze_image(
+                    image_data=img_data["data"],
+                    image_format=img_data["format"],
+                    is_base64=True,
+                    prompt="这是一个数据可视化图表。请详细描述这个图表展示的内容，包括图表类型、轴标签、数据趋势等关键信息。"
+                )
+                
+                # 保存图片描述
+                image_descriptions.append({
+                    "index": i,
+                    "description": image_description
+                })
+                
+                # 发送图片和描述到前端
                 await manager.broadcast_message({
                     "type": "code_execution_image",
                     "data": {
@@ -79,6 +97,7 @@ async def exec_code(code: str, conversation_id: str) -> Dict[str, Any]:
                         "image_data": img_data["data"],
                         "image_format": img_data["format"],
                         "image_index": i,
+                        "image_description": image_description,
                         "timestamp": time.time()
                     }
                 })
@@ -111,7 +130,8 @@ async def exec_code(code: str, conversation_id: str) -> Dict[str, Any]:
                 ],
                 key=lambda x: x["timestamp"]
             ),
-            "image_count": len(status.get("images", []))
+            "image_count": len(status.get("images", [])),
+            "image_descriptions": image_descriptions
         }
 
     except Exception as e:
