@@ -81,6 +81,16 @@
             ,<div v-html="formatFileList(message.metadata?.arguments?.filenames)"/>
           </div> -->
           
+          <!-- 安装包工具 -->
+          <div v-else-if="message.metadata?.function === 'install_package'" class="package-info">
+            <div class="markdown-body p-3 bg-white border border-gray-200 rounded-md">
+              <p class="text-sm mb-2">📦 正在安装包：</p>
+              <p class="font-mono text-purple-600 bg-gray-50 px-2 py-1 rounded inline-block">
+                {{ message.metadata?.arguments?.package_name }}
+              </p>
+            </div>
+          </div>
+          
         </div>
       </div>
     </div>
@@ -131,6 +141,17 @@
           </div>
           </div>
           
+          <!-- 安装包结果 -->
+          <div v-else-if="message.metadata?.function === 'install_package'" class="tool-other-result">
+            <div v-if="message.metadata?.result?.status === 'success'" class="bg-green-50 p-2 rounded-md text-green-600">
+              <p>{{ message.metadata?.result?.message }}</p>
+            </div>
+            <div v-else class="bg-red-50 p-2 rounded-md text-red-500">
+              <p>{{ message.metadata?.result?.message }}</p>
+              <p class="text-xs mt-1">{{ message.metadata?.result?.details }}</p>
+            </div>
+          </div>
+
           <!-- 文件读取结果 -->
           <div v-else class="tool-other-result">
             <div v-for="r in message.metadata.result" :key="r" class="text-sm">
