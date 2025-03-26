@@ -60,6 +60,10 @@ async def analyze_image(image_data: Union[str, bytes], image_format: str = "png"
         settings = get_settings()
         vision_config = settings.vision_model
         
+        # 检查视觉模型配置是否完整
+        if not vision_config.api_key or not vision_config.endpoint or not vision_config.model:
+            return "视觉模型未配置，无法分析图片。请在设置中配置视觉模型后重试。"
+        
         # 处理图片数据
         if isinstance(image_data, str) and not is_base64:
             # 如果是文件路径，则编码图片
@@ -73,36 +77,40 @@ async def analyze_image(image_data: Union[str, bytes], image_format: str = "png"
         else:
             raise ValueError("不支持的图片数据类型")
         
-        # 创建异步客户端
-        client = AsyncOpenAI(
-            api_key=vision_config.api_key,
-            base_url=vision_config.endpoint
-        )
-        
-        # 发送异步请求
-        completion = await client.chat.completions.create(
-            model=vision_config.model,
-            messages=[
-                {"role": "system", "content": "你是一个图像分析助手。"},
-                {
-                    "role": "user",
-                    "content": [
-                        {
-                            "type": "image_url",
-                            "image_url": {
-                                "url": image_url,
+        try:
+            # 创建异步客户端
+            client = AsyncOpenAI(
+                api_key=vision_config.api_key,
+                base_url=vision_config.endpoint
+            )
+            
+            # 发送异步请求
+            completion = await client.chat.completions.create(
+                model=vision_config.model,
+                messages=[
+                    {"role": "system", "content": "你是一个图像分析助手。"},
+                    {
+                        "role": "user",
+                        "content": [
+                            {
+                                "type": "image_url",
+                                "image_url": {
+                                    "url": image_url,
+                                },
                             },
-                        },
-                        {
-                            "type": "text",
-                            "text": prompt,
-                        },
-                    ],
-                },
-            ],
-        )
-        
-        return completion.choices[0].message.content
+                            {
+                                "type": "text",
+                                "text": prompt,
+                            },
+                        ],
+                    },
+                ],
+            )
+            
+            return completion.choices[0].message.content
+            
+        except Exception as e:
+            return f"视觉模型调用失败: {str(e)}。请检查视觉模型配置是否正确。"
     
     except Exception as e:
         raise Exception(f"图片分析失败: {str(e)}")
