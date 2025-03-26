@@ -1,10 +1,12 @@
 import { ref } from 'vue'
+import { configService } from './config'
 import { useConversationStore } from '../stores/conversation'
 import { useCodeExecutionStore } from '../stores/codeExecution'
 import { ElMessage } from 'element-plus'
 import type { OutputItem, ImageItem, ExecutionStatus } from '../types'
 
-const WS_URL = 'ws://127.0.0.1:8000/ws'
+// 删除原有的 WS_URL 常量
+// const WS_URL = 'ws://127.0.0.1:8000/ws'
 
 export const websocketService = {
   socket: null as WebSocket | null,
@@ -20,7 +22,8 @@ export const websocketService = {
   connect() {
     if (this.socket?.readyState === WebSocket.OPEN) return
     
-    this.socket = new WebSocket(WS_URL)
+    // 使用 configService 获取 WebSocket URL
+    this.socket = new WebSocket(configService.getWebsocketUrl())
     
     this.socket.onopen = () => {
       console.log('WebSocket连接已建立')
