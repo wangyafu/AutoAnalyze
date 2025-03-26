@@ -277,6 +277,7 @@ class FileSystemManager:
             encodings = ['utf-8', 'gbk', 'gb2312', 'iso-8859-1']
             df = None
             used_encoding = None
+            messages = []  # 用于收集处理过程中的信息
             
             if file_type == 'csv':
                 for encoding in encodings:
@@ -300,22 +301,38 @@ class FileSystemManager:
                 total_rows = len(full_df)
                 used_encoding = 'binary'  # Excel是二进制格式
             
-           
+            # 处理宽表情况
+            column_count = len(df.columns)
+            if column_count > 50:  # 如果列数超过50
+                messages.append(f"表格包含大量字段（{column_count}列），为优化显示，仅展示前30列")
+                df = df.iloc[:, :30]  # 只保留前30列
+            
+            # 检查数据类型
+            complex_types = df.dtypes[df.dtypes.astype(str).isin(['object', 'datetime64[ns]'])]
+            if len(complex_types) > 0:
+                messages.append(f"包含{len(complex_types)}个非数值类型字段")
+            
+            # 检查空值
+            null_columns = df.columns[df.isnull().any()].tolist()
+            if null_columns:
+                messages.append(f"发现{len(null_columns)}个包含空值的字段")
             
             return {
-                "shape": (total_rows, len(df.columns)),  # 显示实际总行数
-                "columns": df.columns.tolist(),
+                "shape": (total_rows, column_count),  # 显示完整的列数
+                "columns": df.columns.tolist(),  # 显示当前处理的列
                 "dtypes": df.dtypes.astype(str).to_dict(),
                 "head": df.head().to_dict(orient='records'),
                 "tail": df.tail().to_dict(orient='records'),
-                "total_rows": total_rows,      # 新增字段，显示实际总行数
-                "encoding": used_encoding, # 新增字段，显示使用的编码
-                "ok":True
+                "total_rows": total_rows,
+                "total_columns": column_count,  # 新增字段，显示总列数
+                "encoding": used_encoding,
+                "messages": messages,  # 新增字段，显示处理信息
+                "ok": True
             }
         except Exception as e:
             logger.error(f"处理表格文件失败: {str(e)}")
             return {
-                "ok":False,
+                "ok": False,
                 "error": str(e)
             }
     
