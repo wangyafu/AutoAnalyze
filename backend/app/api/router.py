@@ -25,19 +25,33 @@ async def update_config(config: SystemConfig):
     """更新系统配置"""
     settings = get_settings()
 
-    # 更新模型配置
+    # 更新主模型配置
     if config.model:
-        # 只更新非空值
         model_data = config.model.model_dump(exclude_unset=True)
         if model_data:
             for key, value in model_data.items():
-                if value is not None:  # 跳过空值
+                if value is not None:
                     setattr(settings.model, key, value)
+
+    # 更新用户代理模型配置
+    if config.user_model:
+        user_model_data = config.user_model.model_dump(exclude_unset=True)
+        if user_model_data:
+            for key, value in user_model_data.items():
+                if value is not None:
+                    setattr(settings.user_model, key, value)
+
+    # 更新视觉模型配置
+    if config.vision_model:
+        vision_model_data = config.vision_model.model_dump(exclude_unset=True)
+        if vision_model_data:
+            for key, value in vision_model_data.items():
+                if value is not None:
+                    setattr(settings.vision_model, key, value)
 
     # 保存配置到文件
     try:
         save_config_to_file(settings, settings.config_path)
-        # 重置配置缓存，确保下次获取是更新后的配置
         reset_settings()
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"保存配置失败: {str(e)}")

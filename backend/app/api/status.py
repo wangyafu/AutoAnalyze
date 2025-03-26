@@ -20,12 +20,22 @@ async def get_status():
     settings = get_settings()
     model_status = await get_model_status()
     
+    # 构建模型状态响应
+    model_response = ModelStatusResponse(
+        status="connected" if model_status["ok"] else "notconnected",
+        type=settings.model.type
+    )
+    
+    # 添加详细的模型状态到配置中
+    config_dict = settings.model_dump()
+    config_dict["model_status"] = model_status["models"]
+    
     return StatusResponse(
         status="ok",
         version=settings.version,
-        model=ModelStatusResponse(status="connected" if model_status["ok"] else "notconnected",type=settings.model.type),
+        model=model_response,
         workspace=settings.workspace,
-        config=settings.model_dump(),
+        config=config_dict,
         tag=tagManager.tag
     )
 

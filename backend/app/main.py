@@ -13,8 +13,6 @@ from app.api.router import api_router
 from app.api.status import tagManager
 from app.websocket.router import router as websocket_router
 from app.config import get_settings
-from app.db.base import init_db
-from app.services.model_service import initialize_model
 import uuid
 # 配置日志
 logging.basicConfig(
@@ -32,18 +30,11 @@ logger = logging.getLogger(__name__)
 async def lifespan(app: FastAPI):
     # 启动事件
     # 初始化数据库
-    logger.info("初始化数据库...")
-    init_db()
+
     #初始化标识
     tag=str(uuid.uuid4())
     tagManager.setTag(tag)
-    # 初始化模型
-    logger.info("初始化模型...")
-    model_initialized = await initialize_model()
-    if model_initialized:
-        logger.info("模型初始化成功")
-    else:
-        logger.warning("模型初始化失败，请检查配置")
+
     
 
     

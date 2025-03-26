@@ -31,10 +31,9 @@ class ServerConfig(BaseModel):
 
 class SystemConfig(BaseModel):
     """系统配置"""
-    model: ModelConfig = Field(..., description="模型配置")
-    # security: SecurityConfig = Field(..., description="安全配置")
-    # database: DatabaseConfig = Field(..., description="数据库配置")
-    # server: ServerConfig = Field(..., description="服务器配置")
+    model: Optional[ModelConfig] = Field(None, description="主模型配置")
+    user_model: Optional[ModelConfig] = Field(None, description="用户代理模型配置")
+    vision_model: Optional[ModelConfig] = Field(None, description="视觉模型配置")
 
 
 class ModelStatusResponse(BaseModel):

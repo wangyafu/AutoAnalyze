@@ -11,68 +11,63 @@ from app.utils.logger import get_logger
 logger=get_logger(__name__)
 _model_client = None
 Agents: List[Union[Agent, DualAgentSystem]] = []
-async def initialize_model(config: ModelConfig = None) -> (bool,ModelClient):
-    """
-    初始化模型
-    
-    Args:
-        config: 模型配置，为None时使用系统配置
-        
-    Returns:
-        bool: 初始化是否成功
-    """
-    global _model_client
-    
-    try:
-        # 获取配置
-        settings = get_settings()
-        model_config = config or settings.model
-        
-        # 创建模型客户端
-        _model_client = create_client(model_config)
-        
-        # 测试连接
-        status = await _model_client.test_connection()
-        
-        return status["connected"],_model_client
-    except Exception as e:
-        print(f"初始化模型失败: {str(e)}")
-        return False,None
 
-async def get_model_client() -> ModelClient:
-    """
-    获取模型客户端实例
-    
-    Returns:
-        ModelClient: 模型客户端实例
-        
-    Raises:
-        Exception: 模型未初始化时抛出异常
-    """
-    global _model_client
-    
-    if _model_client is None:
-        # 尝试初始化
-        if not await initialize_model():
-            raise Exception("模型未初始化或初始化失败")
-    
-    return _model_client
 
 async def get_model_status() -> Dict[str, Any]:
     """
-    获取模型状态
+    获取模型状态，每次都使用最新配置进行连接测试
     
     Returns:
-        Dict[str, Any]: 模型状态信息
+        Dict[str, Any]: 模型状态信息，包含所有模型的状态
     """
     try:
-        client = await get_model_client()
-        status=await client.get_status()
+        settings = get_settings()
+        status = {
+            "ok": False,
+            "models": {
+                "main": {"ok": False, "error": None},
+                "user": {"ok": False, "error": None},
+                "vision": {"ok": False, "error": None}
+            }
+        }
+        
+        # 测试主模型
+        try:
+            main_client = create_client(settings.model)
+            main_status = await main_client.test_connection()
+            status["models"]["main"] = main_status
+            status["ok"] = main_status["connected"]  # 主模型状态决定整体状态
+        except Exception as e:
+            status["models"]["main"]["error"] = str(e)
+            
+        # 测试用户代理模型（如果配置了）
+        if settings.user_model.api_key:
+            try:
+                user_client = create_client(settings.user_model)
+                user_status = await user_client.test_connection()
+                status["models"]["user"] = user_status
+            except Exception as e:
+                status["models"]["user"]["error"] = str(e)
+                
+        # 测试视觉模型（如果配置了）
+        if settings.vision_model.api_key:
+            try:
+                vision_client = create_client(settings.vision_model)
+                vision_status = await vision_client.test_connection()
+                status["models"]["vision"] = vision_status
+            except Exception as e:
+                status["models"]["vision"]["error"] = str(e)
+        
         return status
     except Exception as e:
         return {
             "ok": False,
-            "error": str(e)
+            "error": str(e),
+            "models": {
+                "main": {"ok": False, "error": str(e)},
+                "user": {"ok": False, "error": None},
+                "vision": {"ok": False, "error": None}
+            }
         }
 
 async def send_message(conversation_id: str, content: str, use_dual_agent: bool = False) -> Dict[str, Any]:
@@ -118,28 +113,6 @@ async def send_message(conversation_id: str, content: str, use_dual_agent: bool 
         print(f"发送消息失败: {str(e)}")
         return {"error": str(e)}
 
-async def update_model_config(config: Dict[str, Any]) -> bool:
-    """
-    更新模型配置
-    
-    Args:
-        config: 新的模型配置
-        
-    Returns:
-        bool: 更新是否成功
-    """
-    try:
-        # 更新配置
-        settings = get_settings()
-        for key, value in config.items():
-            if hasattr(settings.model, key):
-                setattr(settings.model, key, value)
-        
-        # 重新初始化模型
-        return await initialize_model(settings.model)
-    except Exception as e:
-        print(f"更新模型配置失败: {str(e)}")
-        return False
 
 
 if __name__ == "__main__":
