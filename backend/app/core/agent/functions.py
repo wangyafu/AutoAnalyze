@@ -2,10 +2,15 @@ import os
 
 from typing import Dict, List, Optional, Any, Union
 import pandas as pd
-
+import subprocess
+import sys
+import asyncio
+import uuid
+import traceback
 
 from app.core.filesystem import FileSystemManager
 import logging
+from app.core.jupyter_execution import jupyter_execution_engine
 
 logger = logging.getLogger(__name__)
 # 获取文件系统管理器实例
@@ -63,6 +68,23 @@ tools = [
                     }
                 },
                 "required": ["code"]
+            }
+        }
+    },
+    {
+        "type": "function",
+        "function": {
+            "name": "install_package",
+            "description": "安装Python包到当前Jupyter内核环境。可用于添加数据分析所需的额外库。",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "package_name": {
+                        "type": "string",
+                        "description": "要安装的包名称，可以包含版本号（例如：'pandas==1.3.5'）"
+                    }
+                },
+                "required": ["package_name"]
             }
         }
     }
@@ -136,6 +158,80 @@ async def read_files(filenames:list[str])->list[dict]:
         results.append(result)
     return results
 
+async def install_package(package_name: str) -> Dict[str, Any]:
+    """
+    安装Python包到当前Jupyter内核环境
+    Tool Metadata:
+    - name: install_package
+    - description: 安装Python包到当前Jupyter内核环境
+    - parameters:
+      - name: package_name
+        type: string
+        description: 要安装的包名称
+        required: true
+    """
+    try:
+        # 确保内核已创建
+        if jupyter_execution_engine.kernel_manager is None:
+            await jupyter_execution_engine.create_kernel("temp")
+        
+        # 获取Python解释器路径
+        python_executable = sys.executable
+        if jupyter_execution_engine.kernel_manager:
+            # 尝试从内核获取Python路径
+            execution_id = str(uuid.uuid4())
+            await jupyter_execution_engine.execute_code(
+                "import sys; print(sys.executable)", 
+                execution_id, 
+                "temp"
+            )
+            # 等待执行完成
+            while True:
+                status = jupyter_execution_engine.get_execution_status(execution_id)
+                if status and status['status'] in ['completed', 'error']:
+                    break
+                await asyncio.sleep(0.5)
+            
+            # 从输出中提取Python路径
+            if status and status['status'] == 'completed':
+                for output in status['output']:
+                    if output['type'] == 'stdout':
+                        python_path = output['content'].strip()
+                        if os.path.exists(python_path):
+                            python_executable = python_path
+                            break
+        
+        # 使用subprocess安装包
+        logger.info(f"正在安装包: {package_name}，使用Python: {python_executable}")
+        process = subprocess.Popen(
+            [python_executable, "-m", "pip", "install", package_name],
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            text=True
+        )
+        
+        stdout, stderr = process.communicate()
+        
+        if process.returncode == 0:
+            return {
+                "status": "success",
+                "message": f"成功安装包: {package_name}",
+                "details": stdout
+            }
+        else:
+            return {
+                "status": "error",
+                "message": f"安装包失败: {package_name}",
+                "details": stderr
+            }
+    except Exception as e:
+        logger.error(f"安装包时出错: {str(e)}")
+        return {
+            "status": "error",
+            "message": f"安装包时出错: {str(e)}",
+            "details": traceback.format_exc()
+        }
+
 class FunctionExecutor:
     def __init__(self,conversation_id:str):
         self.conversation_id=conversation_id
@@ -151,8 +247,9 @@ class FunctionExecutor:
         elif func_name == "exec_code":
             # 新增参数传递
             return await exec_code(args["code"], self.conversation_id)
+        elif func_name == "install_package":
+            return await install_package(args["package_name"])
         else:
             # 添加导入logger的语句，或者使用print替代
-            
             logger.error(f"智能体调用了未知工具函数: {func_name}")
             raise ValueError(f"未知工具函数: {func_name}")
