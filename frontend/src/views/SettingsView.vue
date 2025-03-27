@@ -70,6 +70,13 @@ const form = reactive({
 })
 
 onMounted(async () => {
+  const loadingMessage = ElMessage({
+    message: '正在加载配置...',
+    type: 'info',
+    duration: 0, // 持续显示
+    icon: 'el-icon-loading'
+  })
+  
   try {
     // 优先从本地存储加载用户设置
     const savedPort = localStorage.getItem('backendPort')
@@ -90,9 +97,13 @@ onMounted(async () => {
         Object.assign(form.vision_model, status.config.vision_model)
       }
     }
+    
+    ElMessage.success('配置加载完成')
   } catch (error) {
     console.error('Failed to get system status:', error)
-    ElMessage.error('获取系统状态失败')
+    ElMessage.error('配置加载失败')
+  } finally {
+    loadingMessage.close() // 关闭加载提示
   }
 })
 
