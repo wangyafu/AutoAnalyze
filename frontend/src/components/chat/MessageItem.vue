@@ -178,7 +178,7 @@ import { renderMarkdown } from '../../utils/markdown'
 import { websocketService } from '../../services/websocket'
 import { useCodeExecutionStore } from '../../stores/codeExecution'
 import CodeExecution from './CodeExecution.vue'
-
+import { ElMessage } from 'element-plus'
 const props = defineProps({
   message: {
     type: Object as () => Message,
@@ -193,6 +193,7 @@ function formatMessage(content: string): string {
   } catch (error) {
     // 如果markdown-it渲染失败，使用简单实现作为备选
     console.error('Markdown rendering failed:', error)
+    ElMessage.error('Markdown渲染失败')
     return content
   }
 }

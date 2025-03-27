@@ -93,6 +93,7 @@ onMounted(async () => {
 
     // 检查后端服务一致性
     if(workspaceStore.tag!=status.tag){
+      ElMessage.warning('后端服务已重启')
       //说明服务经过重启了
       workspaceStore.tag=status.tag
       workspaceStore.clearWorkspace()
@@ -102,6 +103,7 @@ onMounted(async () => {
     systemStatus.backendConnected = false
     systemStatus.modelConnected = false
     console.error('Failed to get system status:', error)
+    ElMessage.error('获取系统状态失败')
   } finally {
     systemStatus.loading = false
   }

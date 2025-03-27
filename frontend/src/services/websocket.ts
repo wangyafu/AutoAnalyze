@@ -40,6 +40,7 @@ export const websocketService = {
     
     this.socket.onerror = (error) => {
       console.error('WebSocket错误:', error)
+      ElMessage.error('WebSocket错误')
     }
     
     this.socket.onmessage = (event) => {
@@ -48,6 +49,7 @@ export const websocketService = {
         this.handleMessage(message)
       } catch (error) {
         console.error('解析WebSocket消息失败:', error)
+        ElMessage.error('解析WebSocket消息失败')
       }
     }
   },

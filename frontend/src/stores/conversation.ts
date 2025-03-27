@@ -2,6 +2,7 @@ import { defineStore } from 'pinia'
 import { ref, reactive } from 'vue'
 import { apiService } from '../services/api'
 import { useWorkspaceStore } from './workspace'
+import { ElMessage } from 'element-plus'
 export interface Message {
   id: string
   type: 'user' | 'assistant' | 'tool_start' | 'tool_result' | 'code_execution_start'|"user_assistant"
@@ -34,6 +35,7 @@ export const useConversationStore = defineStore('conversation', () => {
       return response
     } catch (error) {
       console.error('Failed to create conversation:', error)
+      ElMessage.error('创建对话失败')
       throw error
     }
   }
