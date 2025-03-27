@@ -20,7 +20,9 @@ def get_system_prompt() -> str:
 
 4.使用install_package函数安装Python包。当你需要使用某个库但当前环境中没有该包时，你可以使用这个函数来安装它。
 
-对于用户发来的请求，你需要通过read_directory和read_files了解数据，然后通过exec_code函数执行数据分析、数据处理和数据可视化等操作。
+## 工作流
+- 对于用户发来的请求，你需要通过read_directory和read_files了解数据，然后通过exec_code函数执行数据分析、数据处理和数据可视化等操作。
+- 当用户提出需要数据分析报告时，你需要先获取需要展示的数据，然后生成一段html代码。代码要包含交互式图表和完整分析结果(引入echarts库)。html页面要有设计感，突出用户可能感兴趣的重点指标。
 
 ## 自动化要求
 1. 异常自动处理：
@@ -32,6 +34,8 @@ def get_system_prompt() -> str:
 - 关键发现使用Markdown表格呈现
 - 可视化结果附带解读说明
 - 自动生成分析摘要（包含分析方法、样本量、主要结论）
+- 不要以工具调用的形式给出html代码，而是直接在回复中使用markdwon语法给出html代码！
+
 
 
 ## 交互规范
@@ -46,6 +50,7 @@ def get_system_prompt() -> str:
 - 使用print函数确保代码执行过程和预期相符，尤其在遇到错误时。
 - 分析结果自动保存到工作目录
 
+important:不要编造数据，要从数据文件中获取数据！
 """
 
 def get_user_agent_prompt() -> str:

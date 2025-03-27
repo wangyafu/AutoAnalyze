@@ -1,5 +1,5 @@
 <template>
-  <div class="mb-4">
+  <div class="mb-4" :data-message-id="message.id" ref="messageRoot">
     <!-- 用户消息 -->
     <div v-if="message.type === 'user'" class="user-message">
       <div class="flex items-start">
@@ -169,16 +169,25 @@
   </div>
   </div>
 
+  <!-- HTML报告预览模态框 -->
+  <html-report-preview
+    v-if="showHtmlPreview"
+    :html-content="htmlContent"
+    @close="showHtmlPreview = false"
+  />
 </template>
 
 <script setup lang="ts">
-import { defineProps } from 'vue'
+import { defineProps, ref, computed, onMounted, watch } from 'vue'
 import type { Message } from '../../stores/conversation'
 import { renderMarkdown } from '../../utils/markdown'
 import { websocketService } from '../../services/websocket'
 import { useCodeExecutionStore } from '../../stores/codeExecution'
 import CodeExecution from './CodeExecution.vue'
+import HtmlReportPreview from './HtmlReportPreview.vue'
 import { ElMessage } from 'element-plus'
+import { nextTick } from 'vue'
+
 const props = defineProps({
   message: {
     type: Object as () => Message,
@@ -186,16 +195,80 @@ const props = defineProps({
   }
 })
 
+// 添加对根元素的引用
+const messageRoot = ref<HTMLElement | null>(null)
+
+// HTML报告预览相关变量
+const showHtmlPreview = ref(false)
+const htmlContent = ref('')
+const htmlCodeBlocks = ref<Array<{id: number, code: string}>>([])
+
 // 格式化消息内容，支持Markdown
 function formatMessage(content: string): string {
   try {
-    return renderMarkdown(content)
+    const formattedContent = renderMarkdown(content)
+    
+    // 在DOM更新后提取HTML代码块
+    nextTick(() => {
+      extractHtmlCodeBlocks()
+    })
+    
+    return formattedContent
   } catch (error) {
     // 如果markdown-it渲染失败，使用简单实现作为备选
     console.error('Markdown rendering failed:', error)
     ElMessage.error('Markdown渲染失败')
     return content
   }
+}
+
+// 提取HTML代码块
+function extractHtmlCodeBlocks() {
+  // 使用ref直接获取组件根元素
+  const messageElement = messageRoot.value
+  if (!messageElement) {
+    console.warn('无法找到消息元素:', props.message.id)
+    return
+  }
+  
+  const codeBlocks = messageElement.querySelectorAll('pre code.language-html')
+  console.log('提取到的HTML代码块数量:', codeBlocks.length)
+  // 清空现有代码块
+  htmlCodeBlocks.value = []
+  
+  // 提取代码块内容并添加运行按钮
+  codeBlocks.forEach((codeBlock, index) => {
+    // 存储代码块内容
+    const codeContent = codeBlock.textContent || ''
+    htmlCodeBlocks.value.push({
+      id: index,
+      code: codeContent
+    })
+    
+    // 为代码块添加自定义属性，用于标识
+    codeBlock.setAttribute('data-html-block-id', index.toString())
+    
+    // 添加运行按钮
+    const preElement = codeBlock.parentElement
+    if (preElement && !preElement.querySelector('.run-html-button')) {
+      console.log("添加运行按钮")
+      // 创建运行按钮
+      const runButton = document.createElement('button')
+      runButton.className = 'run-html-button absolute top-2 right-2 bg-blue-500 text-white px-2 py-1 rounded text-xs hover:bg-blue-600 transition-colors'
+      runButton.textContent = '运行HTML'
+      runButton.onclick = () => runHtmlCode(codeContent)
+      
+      // 确保pre元素有相对定位
+      preElement.style.position = 'relative'
+      preElement.appendChild(runButton)
+    }
+  })
+}
+
+// 运行HTML代码
+function runHtmlCode(code: string) {
+  htmlContent.value = code
+  showHtmlPreview.value = true
 }
 
 // 取消代码执行
@@ -205,6 +278,7 @@ function cancelExecution(executionId: string) {
     data: { execution_id: executionId }
   }))
 }
+
 function fotmatCode(code:string):string{
   console.log("原始代码为：",code)
   code="```python"+"\n"+code+"\n"+"```"
@@ -220,6 +294,25 @@ function formatFileList(filenames: string[] | undefined): string {
   return filenames.map(f => `- ${f}`).join('\n')
 }
 
+// 添加自定义指令来处理代码块
+const vHtmlCodeBlock = {
+  mounted: (el, binding) => {
+    if (el.classList.contains('language-html')) {
+      const preElement = el.parentElement
+      if (!preElement || preElement.querySelector('.run-html-button')) return
+      
+      // 创建运行按钮
+      const runButton = document.createElement('button')
+      runButton.className = 'run-html-button absolute top-2 right-2 bg-blue-500 text-white px-2 py-1 rounded text-xs hover:bg-blue-600 transition-colors'
+      runButton.textContent = '运行HTML'
+      runButton.onclick = () => runHtmlCode(el.textContent || '')
+      
+      // 确保pre元素有相对定位
+      preElement.style.position = 'relative'
+      preElement.appendChild(runButton)
+    }
+  }
+}
 </script>
 
 <style scoped>
