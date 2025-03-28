@@ -5,7 +5,7 @@
       <div class="flex items-start">
         <div class="user-avatar">
           <div class="w-8 h-8 rounded-full bg-blue-500 flex items-center justify-center text-white">
-            <span>{{ $t('chat.message.userAvatar') }}</span>
+            <span>U</span>
           </div>
         </div>
         <div class="message-content ml-3 p-3 bg-blue-50 rounded-lg">
@@ -19,12 +19,12 @@
       <div class="flex items-start">
         <div class="assistant-avatar" v-if="message.type==='assistant'">
           <div class="w-8 h-8 rounded-full bg-green-500 flex items-center justify-center text-white">
-            <span>{{ $t('chat.message.assistantAvatar') }}</span>
+            <span>A</span>
           </div>
         </div>
         <div class="assistant-avatar" v-else>
           <div class="w-8 h-8 rounded-full bg-green-500 flex items-center justify-center text-white">
-            <span>{{ $t('chat.message.prompterAvatar') }}</span>
+            <span>P</span>
           </div>
         </div>
         <div class="message-content ml-3 p-3 bg-white border border-gray-200 rounded-lg">
@@ -38,7 +38,7 @@
       <div class="flex items-start">
         <div class="tool-avatar">
           <div class="w-8 h-8 rounded-full bg-purple-500 flex items-center justify-center text-white">
-            <span>{{ $t('chat.message.toolAvatar') }}</span>
+            <span>T</span>
           </div>
         </div>
         <div class="message-content ml-3 p-3 bg-gray-50 border border-gray-200 rounded-lg">
@@ -89,7 +89,7 @@
       <div class="flex items-start">
         <div class="code-avatar">
           <div class="w-8 h-8 rounded-full bg-blue-500 flex items-center justify-center text-white">
-            <span>{{ $t('chat.message.codeAvatar') }}</span>
+            <span>C</span>
           </div>
         </div>
         <div class="message-content ml-3 p-3 bg-gray-50 border border-gray-200 rounded-lg">
@@ -113,7 +113,7 @@
       <div class="flex items-start">
         <div class="tool-avatar">
           <div class="w-8 h-8 rounded-full bg-gray-500 flex items-center justify-center text-white">
-            <span>{{ $t('chat.message.resultAvatar') }}</span>
+            <span>R</span>
           </div>
         </div>
         <div class="message-content ml-3 p-3 bg-gray-50 border border-gray-200 rounded-lg">
