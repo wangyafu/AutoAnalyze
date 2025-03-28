@@ -19,7 +19,8 @@ export default {
       placeholder: '例如：D:\\project\\data',
       confirm: '确认',
       current: '当前工作目录',
-      enterWorkspace: '进入工作区'
+      enterWorkspace: '进入工作区',
+      quoteRemoved: '路径两端的引号已被自动移除'
     },
     features: {
       title: '功能亮点',
@@ -82,7 +83,6 @@ export default {
     }
 
   },
-  // ... 现有内容保持不变 ...
   workspace: {
     fileExplorer: {
       title: '文件浏览器',
@@ -163,6 +163,11 @@ export default {
       sendHint: '按 Ctrl+Enter 发送',
       send: '发送'
     }
+  },
+  message: {
+    success: '操作成功',
+    error: '操作失败',
+    warning: '警告'
   }
 
 }

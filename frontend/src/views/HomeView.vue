@@ -163,7 +163,7 @@ const sanitizePath = (path: string): string => {
   const trimmedPath = path.trim()
   if ((trimmedPath.startsWith('"') && trimmedPath.endsWith('"')) || 
       (trimmedPath.startsWith("'") && trimmedPath.endsWith("'"))) {
-    ElMessage.warning('路径两端的引号已被自动移除')
+    ElMessage.warning(t('home.workspace.quoteRemoved'))
     return trimmedPath.slice(1, -1)
   }
   return trimmedPath

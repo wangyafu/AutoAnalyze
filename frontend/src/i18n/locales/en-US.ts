@@ -18,7 +18,8 @@ export default {
       placeholder: 'Example: D:\\project\\data',
       confirm: 'Confirm',
       current: 'Current Working Directory',
-      enterWorkspace: 'Enter Workspace'
+      enterWorkspace: 'Enter Workspace',
+      quoteRemoved: 'Quotes around the path have been automatically removed'
     },
     features: {
       title: 'Features',
@@ -77,7 +78,6 @@ export default {
       modelNamePlaceholder: 'gpt-4'
     }
   },
-  // ... 现有内容保持不变 ...
   workspace: {
     fileExplorer: {
       title: 'File Explorer',
@@ -158,6 +158,11 @@ export default {
       sendHint: 'Press Ctrl+Enter to send',
       send: 'Send'
     }
+  },
+  message: {
+    success: 'Operation successful',
+    error: 'Operation failed',
+    warning: 'Warning'
   }
   
 }
