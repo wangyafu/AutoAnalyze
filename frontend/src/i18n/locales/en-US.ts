@@ -67,6 +67,33 @@ export default {
       userModelIncomplete: 'User agent model configuration is incomplete, dual-agent mode will not be available',
       visionModelIncomplete: 'Vision model configuration is incomplete, AI will not be able to understand generated images'
     }
+  },
+  // ... 现有内容保持不变 ...
+  workspace: {
+    fileExplorer: {
+      title: 'File Explorer',
+    },
+    chat: {
+      title: 'Data Analysis Assistant',
+      agent: {
+        dual: 'Dual Agent Mode',
+        single: 'Single Agent Mode',
+        switchMessage: 'Switched to {mode} agent mode'
+      },
+      buttons: {
+        clearHistory: 'Clear History',
+        returnHome: 'Return Home'
+      }
+    },
+    messages: {
+      selectWorkspace: 'Please select a workspace first',
+      clearConfirm: 'Are you sure you want to clear the current conversation history? This action cannot be undone.',
+      clearSuccess: 'Conversation cleared',
+      clearFailed: 'Failed to clear conversation',
+      warning: 'Warning',
+      confirm: 'Confirm',
+      cancel: 'Cancel'
+    }
   }
   
 }

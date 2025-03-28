@@ -68,5 +68,32 @@ export default {
       userModelIncomplete: '用户代理模型配置不完整，系统将无法使用双智能体模式',
       visionModelIncomplete: '视觉模型配置不完整，AI将无法理解生成的图片'
     }
+  },
+  // ... 现有内容保持不变 ...
+  workspace: {
+    fileExplorer: {
+      title: '文件浏览器',
+    },
+    chat: {
+      title: '数据分析助手',
+      agent: {
+        dual: '双智能体模式',
+        single: '单智能体模式',
+        switchMessage: '已切换到{mode}智能体模式'
+      },
+      buttons: {
+        clearHistory: '清空会话',
+        returnHome: '返回首页'
+      }
+    },
+    messages: {
+      selectWorkspace: '请先选择工作目录',
+      clearConfirm: '确定要清空当前会话历史吗？此操作不可恢复。',
+      clearSuccess: '会话已清空',
+      clearFailed: '清空会话失败',
+      warning: '警告',
+      confirm: '确定',
+      cancel: '取消'
+    }
   }
 }
