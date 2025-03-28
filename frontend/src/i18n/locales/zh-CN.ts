@@ -119,7 +119,17 @@ export default {
       markdownError: 'Markdown渲染失败',
       noMessageElement: '无法找到消息元素',
       htmlBlockCount: '提取到的HTML代码块数量',
-      runHtml: '运行HTML'
+      runHtml: '运行HTML',
+      directory: {
+        reading: '正在读取目录',
+        path: '目录路径'
+      },
+      file: {
+        reading: '正在读取文件'
+      },
+      package: {
+        installing: '正在安装包'
+      }
     },
     tool: {
       executing: '执行工具',

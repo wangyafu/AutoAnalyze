@@ -114,7 +114,17 @@ export default {
       markdownError: 'Markdown rendering failed',
       noMessageElement: 'Cannot find message element',
       htmlBlockCount: 'Number of HTML code blocks extracted',
-      runHtml: 'Run HTML'
+      runHtml: 'Run HTML',
+      directory: {
+        reading: 'Reading Directory',
+        path: 'Directory Path'
+      },
+      file: {
+        reading: 'Reading Files'
+      },
+      package: {
+        installing: 'Installing Package'
+      }
     },
     tool: {
       executing: 'Executing Tool',
