@@ -66,6 +66,15 @@ export default {
       mainModelRequired: 'Please complete the main model configuration, this is required',
       userModelIncomplete: 'User agent model configuration is incomplete, dual-agent mode will not be available',
       visionModelIncomplete: 'Vision model configuration is incomplete, AI will not be able to understand generated images'
+    },
+    modelConfig: {
+      type: 'Model Type',
+      apiKey: 'API Key',
+      apiKeyPlaceholder: 'Please enter API key',
+      endpoint: 'API Endpoint',
+      endpointPlaceholder: 'https://api.openai.com/v1',
+      modelName: 'Model Name',
+      modelNamePlaceholder: 'gpt-4'
     }
   },
   // ... 现有内容保持不变 ...
@@ -93,6 +102,51 @@ export default {
       warning: 'Warning',
       confirm: 'Confirm',
       cancel: 'Cancel'
+    }
+  },
+  chat: {
+    message: {
+      user: 'User',
+      assistant: 'Assistant',
+      tool: 'Tool',
+      result: 'Result',
+      codeExecution: 'Code Execution',
+      markdownError: 'Markdown rendering failed',
+      noMessageElement: 'Cannot find message element',
+      htmlBlockCount: 'Number of HTML code blocks extracted',
+      runHtml: 'Run HTML'
+    },
+    tool: {
+      executing: 'Executing Tool',
+      readingDirectory: 'Reading Directory',
+      readingFiles: 'Reading Files',
+      noFiles: 'No files specified',
+      installingPackage: 'Installing Package',
+      executionResult: 'Tool Execution Result',
+      directorySuccess: 'Directory read successfully',
+      directoryFailed: 'Failed to read directory',
+      fileSuccess: 'File {path} read successfully',
+      fileFailed: 'Failed to read file'
+    },
+    codeExecution: {
+      executing: 'Executing...',
+      completed: 'Execution completed',
+      error: 'Execution error',
+      terminate: 'Terminate',
+      stderr: 'Standard Error',
+      stdout: 'Standard Output'
+    },
+    htmlReport: {
+      title: 'HTML Data Analysis Report',
+      saveAsHtml: 'Save as HTML file',
+      saveSuccess: 'HTML file saved successfully',
+      saveFailed: 'Failed to save HTML file',
+      filename: 'Data Analysis Report'
+    },
+    input: {
+      placeholder: 'Enter your question or command...',
+      sendHint: 'Press Ctrl+Enter to send',
+      send: 'Send'
     }
   }
   
