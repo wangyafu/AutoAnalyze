@@ -1,32 +1,31 @@
 <template>
   <div class="max-w-4xl mx-auto p-6">
     <div class="card">
-      <h1 class="text-2xl font-bold mb-6">系统设置</h1>
+      <h1 class="text-2xl font-bold mb-6">{{ $t('settings.title') }}</h1>
       
       <el-form :model="form" label-position="top">
-        <!-- 添加服务器配置部分 -->
-        <h2 class="text-xl font-semibold mb-4">服务器配置</h2>
-        <el-form-item label="后端服务端口">
+        <h2 class="text-xl font-semibold mb-4">{{ $t('settings.server.title') }}</h2>
+        <el-form-item :label="$t('settings.server.port')">
           <el-input-number 
             v-model="form.server.port" 
             :min="1" 
             :max="65535"
-            placeholder="请输入端口号"
+            :placeholder="$t('settings.server.portPlaceholder')"
           />
         </el-form-item>
         
-        <h2 class="text-xl font-semibold mb-4">主模型配置</h2>
+        <h2 class="text-xl font-semibold mb-4">{{ $t('settings.model.main') }}</h2>
         <ModelConfigForm v-model="form.model" />
         
-        <h2 class="text-xl font-semibold mb-4 mt-8">用户代理模型配置</h2>
+        <h2 class="text-xl font-semibold mb-4 mt-8">{{ $t('settings.model.user') }}</h2>
         <ModelConfigForm v-model="form.user_model" />
         
-        <h2 class="text-xl font-semibold mb-4 mt-8">视觉模型配置</h2>
+        <h2 class="text-xl font-semibold mb-4 mt-8">{{ $t('settings.model.vision') }}</h2>
         <ModelConfigForm v-model="form.vision_model" />
       
         <div class="flex justify-end mt-6">
-          <el-button @click="router.push('/')">取消</el-button>
-          <el-button type="primary" @click="saveSettings" :loading="loading">保存设置</el-button>
+          <el-button @click="router.push('/')">{{ $t('settings.button.cancel') }}</el-button>
+          <el-button type="primary" @click="saveSettings" :loading="loading">{{ $t('settings.button.save') }}</el-button>
         </div>
       </el-form>
     </div>
@@ -36,11 +35,13 @@
 <script setup lang="ts">
 import { ref, reactive, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
+import { useI18n } from 'vue-i18n'
 import { ElMessage } from 'element-plus'
 import { apiService } from '../services/api'
 import { configService } from '../services/config'
 import ModelConfigForm from '../components/ModelConfigForm.vue'
 
+const { t } = useI18n()
 const router = useRouter()
 const loading = ref(false)
 
@@ -71,9 +72,9 @@ const form = reactive({
 
 onMounted(async () => {
   const loadingMessage = ElMessage({
-    message: '正在加载配置...',
+    message: t('settings.message.loading'),
     type: 'info',
-    duration: 0, // 持续显示
+    duration: 0,
     icon: 'el-icon-loading'
   })
   
@@ -98,12 +99,12 @@ onMounted(async () => {
       }
     }
     
-    ElMessage.success('配置加载完成')
+    ElMessage.success(t('settings.message.loadSuccess'))
   } catch (error) {
     console.error('Failed to get system status:', error)
-    ElMessage.error('配置加载失败')
+    ElMessage.error(t('settings.message.loadFailed'))
   } finally {
-    loadingMessage.close() // 关闭加载提示
+    loadingMessage.close()
   }
 })
 
@@ -122,20 +123,16 @@ const checkModelConfig = (model: {
 }
 
 const saveSettings = async () => {
-  // 验证主模型配置（必填）
   if (!checkModelConfig(form.model)) {
-    ElMessage.warning('请完整填写主模型配置，这是必需的')
-  
+    ElMessage.warning(t('settings.message.mainModelRequired'))
   }
   
-  // 检查用户代理模型配置
   if (!checkModelConfig(form.user_model)) {
-    ElMessage.warning('用户代理模型配置不完整，系统将无法使用双智能体模式')
+    ElMessage.warning(t('settings.message.userModelIncomplete'))
   }
   
-  // 检查视觉模型配置
   if (!checkModelConfig(form.vision_model)) {
-    ElMessage.warning('视觉模型配置不完整，AI将无法理解生成的图片')
+    ElMessage.warning(t('settings.message.visionModelIncomplete'))
   }
   
   loading.value = true
@@ -146,20 +143,18 @@ const saveSettings = async () => {
     configService.setBackendPort(newPort)
     await apiService.updateConfig(form)
     
-    // 只在端口变化时更新存储并刷新
     if (oldPort !== newPort) {
-      
-      ElMessage.success('设置已保存，正在应用新端口...')
+      ElMessage.success(t('settings.message.portChanged'))
       setTimeout(() => {
         window.location.reload()
       }, 1000)
     } else {
-      ElMessage.success('设置已保存')
+      ElMessage.success(t('settings.message.saveSuccess'))
       loading.value = false
     }
   } catch (error) {
     console.error('Failed to update config:', error)
-    ElMessage.error('保存设置失败')
+    ElMessage.error(t('settings.message.saveFailed'))
     loading.value = false
   }
 }
