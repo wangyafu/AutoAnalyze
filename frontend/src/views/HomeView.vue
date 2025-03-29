@@ -102,23 +102,36 @@
 </template>
 
 <script setup lang="ts">
-import { onMounted, reactive, ref, computed } from 'vue'
+import { onMounted, reactive, ref, computed, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import { useI18n } from 'vue-i18n'
 import { ElMessage } from 'element-plus'
 import { useWorkspaceStore } from '../stores/workspace'
 import { useConversationStore } from '../stores/conversation'
 import { apiService } from '../services/api'
+import { configService } from '../services/config'
 
-const { t, locale } = useI18n()  // 修改这行，添加 locale
+const { t, locale } = useI18n()
+
+// 使用配置服务中的语言设置
+onMounted(() => {
+  locale.value = configService.language.value
+})
 
 // 添加当前语言计算属性
 const currentLocale = computed(() => locale.value)
 
-// 添加语言切换函数
+// 添加语言切换函数，使用配置服务保存语言偏好
 const toggleLanguage = () => {
-  locale.value = locale.value === 'zh-CN' ? 'en-US' : 'zh-CN'
+  const newLang = locale.value === 'zh-CN' ? 'en-US' : 'zh-CN'
+  locale.value = newLang
+  configService.setLanguage(newLang)
 }
+
+// 监听语言变化，同步到配置服务
+watch(locale, (newLocale) => {
+  configService.setLanguage(newLocale)
+})
 
 const router = useRouter()
 const workspaceStore = useWorkspaceStore()
@@ -163,7 +176,7 @@ const sanitizePath = (path: string): string => {
   const trimmedPath = path.trim()
   if ((trimmedPath.startsWith('"') && trimmedPath.endsWith('"')) || 
       (trimmedPath.startsWith("'") && trimmedPath.endsWith("'"))) {
-    ElMessage.warning(t('home.workspace.quoteRemoved'))
+      ElMessage.warning(t('home.workspace.quoteRemoved'))
     return trimmedPath.slice(1, -1)
   }
   return trimmedPath
