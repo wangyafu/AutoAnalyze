@@ -1,7 +1,7 @@
 version: 1.0.0
 workspace: null
 config_path: D:\deep\backend\config.yaml
-language: zh
+language: en
 model:
   type: openai
   api_key: 
