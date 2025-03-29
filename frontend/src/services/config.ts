@@ -36,7 +36,7 @@ export const i18nMessages = {
 
 export const configService = {
   backendPort: ref(Number(localStorage.getItem('backendPort')) || 8000),
-  language: ref(localStorage.getItem('language') || 'zh-CN'),
+  language: ref(localStorage.getItem('language') || 'en-US'),
   
 
   setBackendPort(port: number) {
