@@ -11,8 +11,7 @@ If you find this project helpful, please consider supporting us by voting on Pro
 
 ### Demo
 
-![Interface Display1](assets/demo1.png)
-![Interface Display2](assets/demo2.png)
+[click here](https://app.arcade.software/share/OCm2dQGJ8LJ2DS1OTxYK)
 
 ## Key Features
 
