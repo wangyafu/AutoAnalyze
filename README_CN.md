@@ -7,6 +7,10 @@ AutoAnalyze是一个让AI为你进行数据分析和处理的工具。你需要�
 
 > 目前项目已经完成了基本功能，我正在继续更新以增强程序的健壮性。
 
+### 支持我们
+如果您觉得这个项目有帮助，请考虑在ProductHunt上为我们投票：
+[![ProductHunt](https://api.producthunt.com/widgets/embed-image/v1/featured.svg?post_id=autoanalyze&theme=light)](https://www.producthunt.com/posts/autoanalyze)
+
 ### Demo
 
 ![](assets/demo1.png)

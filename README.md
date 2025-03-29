@@ -5,6 +5,10 @@ AutoAnalyze is an AI-powered tool for automated data analysis and processing. Si
 
 > :warning: This project is still in early stages and under active development.
 
+### Support Us
+If you find this project helpful, please consider supporting us by voting on ProductHunt:
+[![ProductHunt](https://api.producthunt.com/widgets/embed-image/v1/featured.svg?post_id=autoanalyze&theme=light)](https://www.producthunt.com/posts/autoanalyze)
+
 ### Demo
 
 ![Interface Display1](assets/demo1.png)
