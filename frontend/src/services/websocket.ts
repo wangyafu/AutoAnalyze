@@ -33,14 +33,14 @@ export const websocketService = {
     
     this.socket.onclose = (event) => {
       console.log('WebSocket连接已关闭', event)
-      ElMessage.error('WebSocket连接已关闭')
+      ElMessage.error(configService.t('websocket.connectionClosed'))
       this.connected.value = false
       this.attemptReconnect()
     }
     
     this.socket.onerror = (error) => {
       console.error('WebSocket错误:', error)
-      ElMessage.error('WebSocket错误')
+      ElMessage.error(configService.t('websocket.error'))
     }
     
     this.socket.onmessage = (event) => {
@@ -49,7 +49,7 @@ export const websocketService = {
         this.handleMessage(message)
       } catch (error) {
         console.error('解析WebSocket消息失败:', error)
-        ElMessage.error('解析WebSocket消息失败')
+        ElMessage.error(configService.t('websocket.parseError'))
       }
     }
   },
@@ -95,7 +95,7 @@ export const websocketService = {
   sendUserMessage(data: { conversation_id: string; content: string;use_dual_agent: boolean;}) {
     if (!this.socket || this.socket.readyState !== WebSocket.OPEN) {
       console.error('WebSocket未连接，无法发送消息')
-      ElMessage.error('WebSocket未连接，无法发送消息')
+      ElMessage.error(configService.t('websocket.notConnected'))
       return
     }
     
@@ -117,7 +117,7 @@ export const websocketService = {
         console.log('WebSocket连接已成功建立:', message.data.message)
         // 显示Element Plus消息提示
         ElMessage({
-          message: '已成功和服务器建立websocket连接',
+          message: configService.t('websocket.connected'),
           type: 'success',
           duration: 3000
         })
@@ -223,15 +223,16 @@ export const websocketService = {
         break
       case 'done':
         conversationStore.setLoading(false)
-        ElMessage.success("智能体回复完毕")
+        ElMessage.success(configService.t('websocket.replyCompleted'))
         console.log("智能体回复完毕")
         break
+        
       case 'error':
         // 处理服务器返回的错误消息
         console.error('服务器错误:', message.data)
         // 显示错误提示
         ElMessage.error(
-          message.data.message || '服务器发生错误',)
+          message.data.message || configService.t('websocket.serverError'))
           
         // 如果有详细错误信息，在控制台输出
         if (message.data.details) {

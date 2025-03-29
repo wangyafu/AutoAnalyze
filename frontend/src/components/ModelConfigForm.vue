@@ -1,30 +1,30 @@
 <template>
   <div class="model-config-form">
-    <el-form-item label="模型类型">
+    <el-form-item :label="$t('settings.modelConfig.type')">
       <el-select v-model="modelValue.type" class="w-full">
         <el-option label="OpenAI" value="openai" />
       </el-select>
     </el-form-item>
     
-    <el-form-item label="API密钥">
+    <el-form-item :label="$t('settings.modelConfig.apiKey')">
       <el-input 
         v-model="modelValue.api_key" 
-        placeholder="请输入API密钥" 
+        :placeholder="$t('settings.modelConfig.apiKeyPlaceholder')" 
         show-password 
       />
     </el-form-item>
     
-    <el-form-item label="API端点">
+    <el-form-item :label="$t('settings.modelConfig.endpoint')">
       <el-input 
         v-model="modelValue.endpoint" 
-        placeholder="https://api.openai.com/v1" 
+        :placeholder="$t('settings.modelConfig.endpointPlaceholder')" 
       />
     </el-form-item>
     
-    <el-form-item label="模型名称">
+    <el-form-item :label="$t('settings.modelConfig.modelName')">
       <el-input 
         v-model="modelValue.model" 
-        placeholder="gpt-4" 
+        :placeholder="$t('settings.modelConfig.modelNamePlaceholder')" 
       />
     </el-form-item>
   </div>
@@ -32,6 +32,9 @@
 
 <script setup lang="ts">
 import { computed } from 'vue'
+import { useI18n } from 'vue-i18n'
+
+const { t } = useI18n()
 
 const props = defineProps<{
   modelValue: {

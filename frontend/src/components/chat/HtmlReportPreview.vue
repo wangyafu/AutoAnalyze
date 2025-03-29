@@ -1,7 +1,7 @@
 <template>
   <el-dialog
     v-model="dialogVisible"
-    title="HTML数据分析报告"
+    :title="$t('chat.htmlReport.title')"
     width="80%"
     destroy-on-close
     class="html-report-dialog"
@@ -9,7 +9,7 @@
   >
     <div class="flex justify-end mb-4 space-x-2">
       <el-button type="primary" size="small" @click="saveAsHtml">
-        <i class="el-icon-download mr-1"></i>保存为HTML文件
+        <i class="el-icon-download mr-1"></i>{{ $t('chat.htmlReport.saveAsHtml') }}
       </el-button>
     </div>
     
@@ -26,7 +26,10 @@
 
 <script setup lang="ts">
 import { ref, defineProps, defineEmits, watch, onMounted, onBeforeUnmount } from 'vue'
+import { useI18n } from 'vue-i18n'  // 添加这行
 import { ElMessage } from 'element-plus'
+
+const { t } = useI18n()  // 添加这行
 
 const props = defineProps({
   htmlContent: {
@@ -39,35 +42,27 @@ const emit = defineEmits(['close'])
 const dialogVisible = ref(true)
 const previewFrame = ref<HTMLIFrameElement | null>(null)
 
-// 监听对话框关闭事件
 function handleClose() {
   emit('close')
 }
 
-// 保存为HTML文件
 async function saveAsHtml() {
   try {
-    // 创建Blob对象
     const blob = new Blob([props.htmlContent], { type: 'text/html' })
-    
-    // 创建下载链接
     const url = URL.createObjectURL(blob)
     const link = document.createElement('a')
     link.href = url
-    link.download = `数据分析报告_${new Date().toISOString().slice(0, 10)}.html`
+    link.download = `${t('chat.htmlReport.filename')}_${new Date().toISOString().slice(0, 10)}.html`
     
-    // 触发下载
     document.body.appendChild(link)
     link.click()
-    
-    // 清理
     document.body.removeChild(link)
     URL.revokeObjectURL(url)
     
-    ElMessage.success('HTML文件保存成功')
+    ElMessage.success(t('chat.htmlReport.saveSuccess'))
   } catch (error) {
-    console.error('保存HTML文件失败:', error)
-    ElMessage.error('保存HTML文件失败')
+    console.error(t('chat.htmlReport.saveFailed'), error)
+    ElMessage.error(t('chat.htmlReport.saveFailed'))
   }
 }
 

@@ -2,7 +2,7 @@
   <div class="code-execution">
     <!-- 代码显示部分 -->
     <div class="code-section mb-3">
-      <div class="text-xs text-gray-500 mb-1">代码:</div>
+      <div class="text-xs text-gray-500 mb-1">{{ $t('chat.codeExecution.code') }}:</div>
       <div class="markdown-body" v-html="formattedCode"></div>
     </div>
     
@@ -13,26 +13,26 @@
         <div v-if="status === 'running'" 
              class="text-blue-500 flex items-center">
           <div class="animate-spin mr-2 h-4 w-4 border-2 border-blue-500 rounded-full border-t-transparent"></div>
-          正在执行...
+          {{ $t('chat.codeExecution.executing') }}
         </div>
         <div v-else-if="status === 'completed'"
              class="text-green-500 flex items-center">
           <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
           </svg>
-          执行完成
+          {{ $t('chat.codeExecution.completed') }}
         </div>
         <div v-else-if="status === 'error'"
              class="text-red-500 flex items-center">
           <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
           </svg>
-          执行错误
+          {{ $t('chat.codeExecution.error') }}
         </div>
         <button v-if="status === 'running'"
                 @click="cancelExecution"
                 class="ml-auto px-2 py-1 text-sm text-red-500 hover:text-red-600 border border-red-500 hover:border-red-600 rounded">
-          终止执行
+          {{ $t('chat.codeExecution.terminate') }}
         </button>
       </div>
       
@@ -41,7 +41,7 @@
            class="bg-gray-100 p-2 rounded-md">
         <div v-for="(output, index) in outputs" 
              :key="index" class="mb-2">
-          <div class="text-xs text-gray-500 mb-1">{{ output.type === 'stderr' ? '标准错误' : '标准输出' }}:</div>
+          <div class="text-xs text-gray-500 mb-1">{{ output.type === 'stderr' ? $t('chat.codeExecution.stderr') : $t('chat.codeExecution.stdout') }}:</div>
           <pre class="bg-white p-2 rounded border text-sm overflow-x-auto" 
                :class="{'text-red-500': output.type === 'stderr'}">{{ output.content }}</pre>
         </div>
@@ -53,7 +53,7 @@
         <div v-for="(image, index) in images"
              :key="index" class="border rounded-lg overflow-hidden">
           <img :src="`data:image/${image.format};base64,${image.data}`" 
-               class="w-full h-auto" alt="执行结果图片" />
+               class="w-full h-auto" :alt="$t('chat.codeExecution.imageOutput')" />
         </div>
       </div>
       

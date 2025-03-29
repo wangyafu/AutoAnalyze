@@ -1,6 +1,7 @@
 import { apiService } from './api'
 import { ElMessage } from 'element-plus'
 import type { FilePreview } from '../types'
+import { configService } from './config'
 
 export const filePreviewService = {
   /**
@@ -16,13 +17,13 @@ export const filePreviewService = {
       console.log('File preview:', data)
       
       if (data.is_binary && !data.preview_type) {
-        ElMessage.warning('二进制文件无法预览')
+        ElMessage.warning(configService.t('filePreview.binaryWarning'))
         return null
       }
       
       return data
     } catch (error) {
-      ElMessage.error('文件预览失败')
+      ElMessage.error(configService.t('filePreview.previewFailed'))
       return null
     }
   },

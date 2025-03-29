@@ -1,16 +1,17 @@
 version: 1.0.0
 workspace: null
 config_path: D:\deep\backend\config.yaml
+language: en
 model:
-  type: openai
-  api_key: 
-  endpoint: https://dashscope.aliyuncs.com/compatible-mode/v1
-  model: qwen-plus
-user_model:
   type: openai
   api_key: 
   endpoint: https://api.deepseek.com/v1
   model: deepseek-chat
+user_model:
+  type: openai
+  api_key: ''
+  endpoint: ''
+  model: ''
 vision_model:
   type: openai
   api_key: 

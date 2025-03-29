@@ -22,6 +22,9 @@ class Settings(BaseModel):
     # 配置文件路径
     config_path: str = str(DEFAULT_CONFIG_PATH)
     
+    # 语言配置
+    language: str = "zh"  # 默认中文，支持 "zh"(中文) 和 "en"(英文)
+    
     # 单智能体模式下的智能体配和双智能体模式下的工具调用智能体所用的配置，必须有工具调用能力。
     model: ModelConfig = ModelConfig(
         type="openai",

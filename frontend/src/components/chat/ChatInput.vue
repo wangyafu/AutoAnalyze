@@ -5,13 +5,13 @@
       type="textarea"
       :rows="3"
       :disabled="conversationStore.loading"
-      placeholder="输入您的问题或指令..."
+      :placeholder="$t('chat.input.placeholder')"
       resize="none"
       @keydown.enter.ctrl.prevent="sendMessage"
     />
     <div class="flex justify-between items-center mt-2">
       <div class="text-xs text-gray-500">
-        按 Ctrl+Enter 发送
+        {{ $t('chat.input.sendHint') }}
       </div>
       <el-button 
         type="primary" 
@@ -19,18 +19,18 @@
         :loading="conversationStore.loading"
         @click="sendMessage"
       >
-        发送
+        {{ $t('chat.input.send') }}
       </el-button>
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref,defineEmits } from 'vue'
+import { ref, defineEmits } from 'vue'
+import { useI18n } from 'vue-i18n'
 import { useConversationStore } from '@/stores/conversation'
 
-
-
+const { t } = useI18n()
 const emit = defineEmits(['send'])
 const message = ref('')
 const conversationStore = useConversationStore()

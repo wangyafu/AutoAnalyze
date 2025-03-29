@@ -3,7 +3,7 @@
     <!-- 左侧文件浏览器 -->
     <div class="w-1/4 bg-white border-r border-gray-200 overflow-y-auto">
       <div class="p-4 border-b border-gray-200">
-        <h2 class="text-lg font-semibold">文件浏览器</h2>
+        <h2 class="text-lg font-semibold">{{ $t('workspace.fileExplorer.title') }}</h2>
         <p class="text-sm text-gray-500 mt-1">{{ workspaceStore.currentWorkspace }}</p>
       </div>
       <FileExplorer @filePreview="handleFilePreview"/>
@@ -12,17 +12,20 @@
     <!-- 右侧聊天区域 -->
     <div class="flex-1 flex flex-col overflow-hidden">
       <div class="p-4 border-b border-gray-200 flex justify-between items-center">
-        <h2 class="text-lg font-semibold">数据分析助手</h2>
+        <h2 class="text-lg font-semibold">{{ $t('workspace.chat.title') }}</h2>
         <div class="flex gap-2 items-center">
-          <!-- 添加智能体模式切换开关 -->
           <el-switch
             v-model="useDualAgent"
-            active-text="双智能体模式"
-            inactive-text="单智能体模式"
+            :active-text="$t('workspace.chat.agent.dual')"
+            :inactive-text="$t('workspace.chat.agent.single')"
             @change="handleAgentModeChange"
           />
-          <el-button size="small" type="danger" @click="clearHistory">清空会话</el-button>
-          <el-button size="small" @click="router.push('/')">返回首页</el-button>
+          <el-button size="small" type="danger" @click="clearHistory">
+            {{ $t('workspace.chat.buttons.clearHistory') }}
+          </el-button>
+          <el-button size="small" @click="router.push('/')">
+            {{ $t('workspace.chat.buttons.returnHome') }}
+          </el-button>
         </div>
       </div>
       
@@ -48,6 +51,7 @@
 <script setup lang="ts">
 import { ref, onMounted, nextTick, watch } from 'vue'
 import { useRouter } from 'vue-router'
+import { useI18n } from 'vue-i18n'  // 添加这行
 import { ElMessage, ElMessageBox } from 'element-plus'
 import FileExplorer from '../components/file/FileExplorer.vue'
 import ChatHistory from '../components/chat/ChatHistory.vue'
@@ -58,7 +62,7 @@ import { useConversationStore } from '../stores/conversation'
 import { websocketService } from '../services/websocket'
 import { filePreviewService } from '../services/filePreview'
 import type { FilePreview } from '../types'
-
+const { t } = useI18n()
 const router = useRouter()
 const workspaceStore = useWorkspaceStore()
 const conversationStore = useConversationStore()
@@ -72,7 +76,7 @@ const useDualAgent = ref(false)
 // 如果没有设置工作目录，重定向到首页
 onMounted(() => {
   if (!workspaceStore.currentWorkspace) {
-    ElMessage.warning('请先选择工作目录')
+    ElMessage.warning(t('workspace.messages.selectWorkspace'))
     router.push('/')
     return
   }
@@ -83,7 +87,8 @@ onMounted(() => {
 
 // 处理智能体模式切换
 function handleAgentModeChange(value: boolean) {
-  ElMessage.info(`已切换到${value ? '双' : '单'}智能体模式`)
+  const mode = value ? t('workspace.chat.agent.dual') : t('workspace.chat.agent.single')
+  ElMessage.info(t('workspace.chat.agent.switchMessage', { mode }))
 }
 
 async function handleFilePreview(path: string) {
@@ -123,19 +128,19 @@ const sendMessage = (content: string) => {
 async function clearHistory() {
   try {
     await ElMessageBox.confirm(
-      '确定要清空当前会话历史吗？此操作不可恢复。',
-      '警告',
+      t('workspace.messages.clearConfirm'),
+      t('workspace.messages.warning'),
       {
-        confirmButtonText: '确定',
-        cancelButtonText: '取消',
+        confirmButtonText: t('workspace.messages.confirm'),
+        cancelButtonText: t('workspace.messages.cancel'),
         type: 'warning',
       }
     )
     await conversationStore.createConversation()
-    ElMessage.success('会话已清空')
+    ElMessage.success(t('workspace.messages.clearSuccess'))
   } catch (error) {
     if (error !== 'cancel') {
-      ElMessage.error('清空会话失败')
+      ElMessage.error(t('workspace.messages.clearFailed'))
     }
   }
 }

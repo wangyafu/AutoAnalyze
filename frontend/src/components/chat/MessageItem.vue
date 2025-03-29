@@ -42,20 +42,14 @@
           </div>
         </div>
         <div class="message-content ml-3 p-3 bg-gray-50 border border-gray-200 rounded-lg">
-          <div class="text-sm  mb-1">执行工具: {{ message.metadata?.function }}</div>
-          
-          <!-- 代码执行工具 -->
-          <!-- <div v-if="message.metadata?.function === 'exec_code'" class="markdown-body"
-           v-html="fotmatCode(message.metadata?.arguments?.code)">
-
-          </div> -->
+          <div class="text-sm mb-1">{{ $t('chat.tool.executing') }}: {{ message.metadata?.function }}</div>
           
           <!-- 读取目录工具 -->
           <div v-if="message.metadata?.function === 'read_directory'" class="directory-info">
             <div class="markdown-body p-3 bg-white border border-gray-200 rounded-md">
-              <p class="text-sm  mb-2">📂 正在读取目录：</p>
+              <p class="text-sm mb-2">📂 {{ $t('chat.message.directory.reading') }}</p>
               <p class="font-mono text-blue-600 bg-gray-50 px-2 py-1 rounded inline-block">
-                {{ message.metadata?.arguments?.path || '/' }}
+                {{ message.metadata?.arguments?.path || $t('chat.message.directory.path') }}
               </p>
             </div>
           </div>
@@ -63,7 +57,7 @@
           <!-- 读取文件工具 -->
           <div v-else-if="message.metadata?.function === 'read_files'" class="file-info">
             <div class="markdown-body p-3 bg-white border border-gray-200 rounded-md">
-              <p class="text-sm  mb-2">📁 正在读取文件：</p>
+              <p class="text-sm mb-2">📁 {{ $t('chat.message.file.reading') }}</p>
               <ul class="list-disc pl-6 space-y-1">
                 <li v-for="file in message.metadata?.arguments?.filenames" 
                     :key="file"
@@ -71,26 +65,21 @@
                   {{ file }}
                 </li>
                 <li v-if="!message.metadata?.arguments?.filenames?.length" class="text-gray-400">
-                  未指定文件
+                  {{ $t('chat.tool.noFiles') }}
                 </li>
               </ul>
             </div>
           </div>
-          <!-- <div class="markdown-body text-sm flex justify-between items-center">
-            <span>文件列表</span>
-            ,<div v-html="formatFileList(message.metadata?.arguments?.filenames)"/>
-          </div> -->
           
           <!-- 安装包工具 -->
           <div v-else-if="message.metadata?.function === 'install_package'" class="package-info">
             <div class="markdown-body p-3 bg-white border border-gray-200 rounded-md">
-              <p class="text-sm mb-2">📦 正在安装包：</p>
+              <p class="text-sm mb-2">📦 {{ $t('chat.message.package.installing') }}</p>
               <p class="font-mono text-purple-600 bg-gray-50 px-2 py-1 rounded inline-block">
                 {{ message.metadata?.arguments?.package_name }}
               </p>
             </div>
           </div>
-          
         </div>
       </div>
     </div>
@@ -104,9 +93,8 @@
           </div>
         </div>
         <div class="message-content ml-3 p-3 bg-gray-50 border border-gray-200 rounded-lg">
-          <div class="text-sm mb-1">代码执行:</div>
+          <div class="text-sm mb-1">{{ $t('chat.message.codeExecution') }}:</div>
           
-          <!-- 使用整合的代码执行组件 -->
           <code-execution
             :execution-id="message.metadata.execution_id"
             :code="message.metadata.code"
@@ -129,16 +117,15 @@
           </div>
         </div>
         <div class="message-content ml-3 p-3 bg-gray-50 border border-gray-200 rounded-lg">
-          <div class="text-sm text-gray-500 mb-1">工具执行结果:</div>
-          
+          <div class="text-sm text-gray-500 mb-1">{{ $t('chat.tool.executionResult') }}:</div>
           
           <div v-if="message.metadata?.function==='read_directory'" class="tool-other-result">
             <div v-if="message.metadata?.result?.status === 'success'" class="bg-green-50 p-2 rounded-md text-green-600">
-            <p>目录读取成功</p>
-          </div>
-          <div v-else class="bg-red-50 p-2 rounded-md text-red-500">
-            <p>目录读取失败:{{message.metadata?.result?.message}}</p>
-          </div>
+              <p>{{ $t('chat.tool.directorySuccess') }}</p>
+            </div>
+            <div v-else class="bg-red-50 p-2 rounded-md text-red-500">
+              <p>{{ $t('chat.tool.directoryFailed') }}: {{ message.metadata?.result?.message }}</p>
+            </div>
           </div>
           
           <!-- 安装包结果 -->
@@ -156,20 +143,18 @@
           <div v-else class="tool-other-result">
             <div v-for="r in message.metadata.result" :key="r" class="text-sm">
               <div v-if="r.status === 'success'" class="p-2 rounded-md text-green-600">
-                {{ `文件${r.info.path}读取成功` }}
+                {{ $t('chat.tool.fileSuccess', { path: r.info.path }) }}
               </div>
               <div v-else class="p-2 rounded-md text-red-500">
-                {{ `文件读取失败: ${r.message}` }}
+                {{ $t('chat.tool.fileFailed') }}: {{ r.message }}
               </div>
-            
+            </div>
           </div>
         </div>
       </div>
     </div>
   </div>
-  </div>
 
-  <!-- HTML报告预览模态框 -->
   <html-report-preview
     v-if="showHtmlPreview"
     :html-content="htmlContent"
@@ -187,7 +172,8 @@ import CodeExecution from './CodeExecution.vue'
 import HtmlReportPreview from './HtmlReportPreview.vue'
 import { ElMessage } from 'element-plus'
 import { nextTick } from 'vue'
-
+import { useI18n } from 'vue-i18n'  // 添加这行
+const { t } = useI18n()  // 添加这行
 const props = defineProps({
   message: {
     type: Object as () => Message,
@@ -217,7 +203,7 @@ function formatMessage(content: string): string {
   } catch (error) {
     // 如果markdown-it渲染失败，使用简单实现作为备选
     console.error('Markdown rendering failed:', error)
-    ElMessage.error('Markdown渲染失败')
+    ElMessage.error(t('chat.message.markdownError'))
     return content
   }
 }
@@ -255,7 +241,8 @@ function extractHtmlCodeBlocks() {
       // 创建运行按钮
       const runButton = document.createElement('button')
       runButton.className = 'run-html-button absolute top-2 right-2 bg-blue-500 text-white px-2 py-1 rounded text-xs hover:bg-blue-600 transition-colors'
-      runButton.textContent = '运行HTML'
+      // 修改相关文本
+      runButton.textContent = t('chat.message.runHtml')
       runButton.onclick = () => runHtmlCode(codeContent)
       
       // 确保pre元素有相对定位
@@ -294,25 +281,7 @@ function formatFileList(filenames: string[] | undefined): string {
   return filenames.map(f => `- ${f}`).join('\n')
 }
 
-// 添加自定义指令来处理代码块
-const vHtmlCodeBlock = {
-  mounted: (el, binding) => {
-    if (el.classList.contains('language-html')) {
-      const preElement = el.parentElement
-      if (!preElement || preElement.querySelector('.run-html-button')) return
-      
-      // 创建运行按钮
-      const runButton = document.createElement('button')
-      runButton.className = 'run-html-button absolute top-2 right-2 bg-blue-500 text-white px-2 py-1 rounded text-xs hover:bg-blue-600 transition-colors'
-      runButton.textContent = '运行HTML'
-      runButton.onclick = () => runHtmlCode(el.textContent || '')
-      
-      // 确保pre元素有相对定位
-      preElement.style.position = 'relative'
-      preElement.appendChild(runButton)
-    }
-  }
-}
+
 </script>
 
 <style scoped>
