@@ -146,7 +146,9 @@ export default {
       error: 'Execution error',
       terminate: 'Terminate',
       stderr: 'Standard Error',
-      stdout: 'Standard Output'
+      stdout: 'Standard Output',
+      code: 'Code',
+      imageOutput: 'Execution result image'
     },
     htmlReport: {
       title: 'HTML Data Analysis Report',

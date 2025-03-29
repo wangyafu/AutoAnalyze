@@ -151,7 +151,9 @@ export default {
       error: '执行错误',
       terminate: '终止执行',
       stderr: '标准错误',
-      stdout: '标准输出'
+      stdout: '标准输出',
+      code: '代码',
+      imageOutput: '执行结果图片'
     },
     htmlReport: {
       title: 'HTML数据分析报告',
