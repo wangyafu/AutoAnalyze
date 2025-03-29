@@ -11,7 +11,9 @@ export default {
       normal: '正常',
       abnormal: '异常',
       goToSettings: '前往设置',
-      modifyConfig: '修改配置'
+      modifyConfig: '修改配置',
+      backendRestarted: '后端服务已重启',
+      statusFailed: '获取系统状态失败'
     },
     workspace: {
       title: '选择工作目录',

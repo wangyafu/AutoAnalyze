@@ -10,7 +10,9 @@ export default {
       normal: 'Normal',
       abnormal: 'Abnormal',
       goToSettings: 'Go to Settings',
-      modifyConfig: 'Modify Configuration'
+      modifyConfig: 'Modify Configuration',
+      backendRestarted: 'Backend service has been restarted',
+      statusFailed: 'Failed to get system status'
     },
     workspace: {
       title: 'Select Working Directory',
