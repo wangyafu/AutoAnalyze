@@ -7,8 +7,7 @@ AutoAnalyze is an AI-powered tool for automated data analysis and processing. Si
 
 ### Demo
 
-![Interface Display1](assets/demo1.png)
-![Interface Display2](assets/demo2.png)
+[click here](https://app.arcade.software/share/OCm2dQGJ8LJ2DS1OTxYK)
 
 ## Key Features
 
