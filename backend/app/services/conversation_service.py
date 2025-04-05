@@ -1,7 +1,6 @@
 from typing import List, Optional, Dict, Any
 from uuid import uuid4
 from datetime import datetime
-from ..db.crud import crud_conversation, crud_message
 from ..schemas.conversation import ConversationCreate
 from sqlalchemy.orm import Session
 
