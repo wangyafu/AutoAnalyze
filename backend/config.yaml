@@ -1,6 +1,6 @@
 version: 1.0.0
 workspace: null
-config_path: D:\deep\backend\config.yaml
+config_path: 
 language: en
 model:
   type: openai
@@ -14,7 +14,7 @@ user_model:
   model: ''
 vision_model:
   type: openai
-  api_key: 
+  api_key: null
   endpoint: https://api.moonshot.cn/v1
   model: moonshot-v1-8k-vision-preview
 server:
