@@ -87,7 +87,10 @@ def get_settings() -> Settings:
             for key, value in config_data.items():
                 if (key not in ["model", "user_model", "vision_model", "server"] and 
                     hasattr(settings, key) and 
-                    value != ""):  # 添加空值检查
+                    value != "") and value:  # 添加空值检查
+                    # 特殊处理config_path，确保不会被设置为空值
+                    if key == "config_path" and (not value or value.strip() == ""):
+                        continue
                     setattr(settings, key, value)
         except Exception as e:
             logger.error(f"加载配置文件失败: {str(e)}")
@@ -120,6 +123,49 @@ def load_config_from_file(path: str) -> Dict[str, Any]:
         return yaml.safe_load(f)  # 修改为yaml加载
 
 
+@lru_cache()
+def get_settings() -> Settings:
+    """获取应用配置实例
+    
+    使用lru_cache装饰器缓存配置实例，避免重复加载
+    
+    Returns:
+        Settings: 应用配置实例
+    """
+    settings = Settings()
+    
+    # 如果配置文件存在，从文件加载配置
+    if os.path.exists(settings.config_path):
+        try:
+            config_data = load_config_from_file(settings.config_path)
+            # 修改这部分代码，正确处理嵌套配置
+            if "model" in config_data and isinstance(config_data["model"], dict):
+                settings.model = ModelConfig(**config_data["model"])
+            if "user_model" in config_data and isinstance(config_data["user_model"], dict):
+                settings.user_model = ModelConfig(**config_data["user_model"])
+            if "vision_model" in config_data and isinstance(config_data["vision_model"], dict):
+                settings.vision_model = ModelConfig(**config_data["vision_model"])
+            # 处理其他非嵌套配置，跳过空值
+            for key, value in config_data.items():
+                if (key not in ["model", "user_model", "vision_model", "server"] and 
+                    hasattr(settings, key) and 
+                    value != "") and value:  # 添加空值检查
+                    # 特殊处理config_path，确保不会被设置为空值
+                    if key == "config_path" and (not value or value.strip() == ""):
+                        continue
+                    setattr(settings, key, value)
+        except Exception as e:
+            logger.error(f"加载配置文件失败: {str(e)}")
+    else:
+        # 配置文件不存在，创建默认配置文件
+        try:
+            save_config_to_file(settings, settings.config_path)
+        except Exception as e:
+            logger.error(f"创建默认配置文件失败: {str(e)}")
+    
+    return settings
+
+
 def save_config_to_file(config: Settings, path: str) -> None:
     """保存配置到文件
     
@@ -130,6 +176,11 @@ def save_config_to_file(config: Settings, path: str) -> None:
     Raises:
         Exception: 保存失败时抛出异常
     """
+    # 检查路径是否有效
+    if not path or path.strip() == "":
+        logger.error("配置文件路径为空，使用默认路径")
+        path = str(DEFAULT_CONFIG_PATH)
+    
     # 确保目录存在
     logger.info(f"保存配置到文件: {path}")
     os.makedirs(os.path.dirname(path), exist_ok=True)
