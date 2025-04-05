@@ -10,6 +10,7 @@ dependencies = [
     "jupyter-client>=8.6.3",
     "markitdown>=0.1.0",
     "matplotlib>=3.7.5",
+    "openai>=1.70.0",
     "openpyxl>=3.1.5",
     "pandas>=2.0.3",
     "pyyaml>=6.0.2",
@@ -18,4 +19,5 @@ dependencies = [
     "statsmodels>=0.14.1",
     "uvicorn>=0.33.0",
     "watchdog>=4.0.2",
+    "websockets>=15.0.1",
 ]
